@@ -211,7 +211,9 @@ class xbmcnfo(Agent.TV_Shows):
 												try: episode.studio = nfoXML.findall("studio")[0].text
 												except: pass
 												#airdate
-												try: episode.duration = nfoXML.findall("aired")[0].text
+												try:
+													runtime = nfoXML.findall("runtime")[0].text
+													episode.duration = int(re.compile('^([0-9]+)').findall(runtime)[0])
 												except: pass
 
 												thumbFilename = nfoFile.replace('.nfo', '.tbn')
