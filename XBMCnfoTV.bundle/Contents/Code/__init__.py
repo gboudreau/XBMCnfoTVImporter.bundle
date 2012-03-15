@@ -4,7 +4,7 @@
 # Original code author: Harley Hooligan
 # Modified by Guillaume Boudreau
 #
-import os, re, os.path
+import os, re, os.path, time, datetime
 
 class xbmcnfo(Agent.TV_Shows):
 	name = 'XBMC TV .nfo Importer'
@@ -202,7 +202,13 @@ class xbmcnfo(Agent.TV_Shows):
 												try: episode.summary = nfoXML.xpath('./plot')[0].text
 												except: pass			
 												#year
-												try: episode.originally_available_at = int(nfoXML.xpath("aired")[0].text)
+												try:
+													try:
+														air_date = time.strptime(nfoXML.xpath("releasedate")[0].text, "%d %B %Y")
+													except:
+														air_date = time.strptime(nfoXML.xpath("releasedate")[0].text, "%Y-%m-%d")
+													if air_date:
+														episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(air_date)).date()
 												except: pass
 												#content rating
 												try: episode.content_rating = nfoXML.xpath('./mpaa')[0].text
@@ -213,7 +219,7 @@ class xbmcnfo(Agent.TV_Shows):
 												#airdate
 												try:
 													runtime = nfoXML.findall("runtime")[0].text
-													episode.duration = int(re.compile('^([0-9]+)').findall(runtime)[0])
+													episode.duration = int(re.compile('^([0-9]+)').findall(runtime)[0]) * 60 * 1000 # ms
 												except: pass
 
 												thumbFilename = nfoFile.replace('.nfo', '.tbn')
