@@ -24,6 +24,10 @@ class xbmcnfo(Agent.TV_Shows):
 		path = os.path.dirname(path1)
 		nfoName = path + "/tvshow.nfo"
 		Log('Looking for TV Show NFO file at ' + nfoName)
+		if not os.path.exists(nfoName):
+			path = os.path.dirname(path)
+			nfoName = path + "/tvshow.nfo"
+			Log('Looking for TV Show NFO file at ' + nfoName)
 		if os.path.exists(nfoName):
 			nfoFile = nfoName
 			nfoText = Core.storage.load(nfoFile)
@@ -66,6 +70,15 @@ class xbmcnfo(Agent.TV_Shows):
 		path1 = String.Unquote(nfoXML.get('file'))
 		path = os.path.dirname(path1)
 
+		nfoName = path + "/tvshow.nfo"
+		Log('Looking for TV Show NFO file at ' + nfoName)
+		if not os.path.exists(nfoName):
+			path = os.path.dirname(path)
+			nfoName = path + "/tvshow.nfo"
+			Log('Looking for TV Show NFO file at ' + nfoName)
+			if not os.path.exists(nfoName):
+				return
+
 		# Grabs the TV Show data
 		posterFilename = path + "/folder.jpg"
 		if os.path.exists(posterFilename):
@@ -85,8 +98,6 @@ class xbmcnfo(Agent.TV_Shows):
 			metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
 			Log('Found fanart image at ' + fanartFilename)
 
-		nfoName=path + "/tvshow.nfo"
-		Log('Looking for TV Show NFO file at ' + nfoName)
 		if os.path.exists(nfoName):
 			nfoFile = nfoName
 			nfoText = Core.storage.load(nfoFile)
