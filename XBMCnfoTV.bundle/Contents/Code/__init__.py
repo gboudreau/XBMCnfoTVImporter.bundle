@@ -180,9 +180,11 @@ class xbmcnfo(Agent.TV_Shows):
 							episodes = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Video')
 							Log("Found " + str(len(episodes)) + " episodes.")
 							
-							seasonFileName = 'season%(number)02d.tbn' % {"number": int(season_num)}
+							if(int(season_num) == 0):
+								seasonFileName = 'season-specials.tbn'
+							else:
+								seasonFileName = 'season%(number)02d.tbn' % {"number": int(season_num)}
 							seasonPathFilename = path + '/' + seasonFileName
-							Log("path season img :" + seasonPathFilename)
 							if os.path.exists(seasonPathFilename):
 								seasonData = Core.storage.load(seasonPathFilename)
 								metadata.seasons[season_num].posters[seasonFileName] = Proxy.Media(seasonData)
