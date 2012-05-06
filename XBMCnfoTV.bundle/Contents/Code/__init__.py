@@ -141,7 +141,7 @@ class xbmcnfo(Agent.TV_Shows):
 				except: pass
 				Log('Title: ' + metadata.title)
 				if metadata.originally_available_at:
-					Log('Aired: ' + metadata.originally_available_at)
+					Log('Aired: ' + str(metadata.originally_available_at.year) + '-' + str(metadata.originally_available_at.month) + '-' + str(metadata.originally_available_at.day))
 
 				#actors
 				metadata.roles.clear()
@@ -170,7 +170,8 @@ class xbmcnfo(Agent.TV_Shows):
 						except: pass
 						try: season_num=seasons.get('index')
 						except: pass
-
+						
+						Log("seasonID : " + path)
 						if seasonID.count('allLeaves') == 0:
 							Log("Finding episodes")
 
@@ -178,7 +179,15 @@ class xbmcnfo(Agent.TV_Shows):
 
 							episodes = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Video')
 							Log("Found " + str(len(episodes)) + " episodes.")
-			
+							
+							seasonFileName = 'season%(number)02d.tbn' % {"number": int(season_num)}
+							seasonPathFilename = path + '/' + seasonFileName
+							Log("path season img :" + seasonPathFilename)
+							if os.path.exists(seasonPathFilename):
+								seasonData = Core.storage.load(seasonPathFilename)
+								metadata.seasons[season_num].posters[seasonFileName] = Proxy.Media(seasonData)
+								Log('Found season image at ' + seasonPathFilename)
+							
 							episodeXML = []
 							for episodeXML in episodes:
 								ep_num = episodeXML.get('index')
