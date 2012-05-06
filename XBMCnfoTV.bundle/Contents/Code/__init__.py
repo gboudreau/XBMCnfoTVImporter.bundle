@@ -189,7 +189,6 @@ class xbmcnfo(Agent.TV_Shows):
 								seasonData = Core.storage.load(seasonPathFilename)
 								metadata.seasons[season_num].posters[seasonFileName] = Proxy.Media(seasonData)
 								Log('Found season image at ' + seasonPathFilename)
-							
 							episodeXML = []
 							for episodeXML in episodes:
 								ep_num = episodeXML.get('index')
