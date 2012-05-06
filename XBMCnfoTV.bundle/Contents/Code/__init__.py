@@ -10,10 +10,11 @@ class xbmcnfo(Agent.TV_Shows):
 	name = 'XBMC TV .nfo Importer'
 	primary_provider = True
 	languages = [Locale.Language.English]
-
+	
 	def search(self, results, media, lang):
 		Log("Searching")
 	
+		parse_date = lambda s: Datetime.ParseDate(s).date()
 		pageUrl="http://localhost:32400/library/metadata/" + media.id + "/tree"
 		page=HTTP.Request(pageUrl)
 		Log(media.primary_metadata)
@@ -24,6 +25,10 @@ class xbmcnfo(Agent.TV_Shows):
 		path = os.path.dirname(path1)
 		nfoName = path + "/tvshow.nfo"
 		Log('Looking for TV Show NFO file at ' + nfoName)
+		if not os.path.exists(nfoName):
+			path = os.path.dirname(path)
+			nfoName = path + "/tvshow.nfo"
+			Log('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path)
 			nfoName = path + "/tvshow.nfo"
@@ -47,7 +52,7 @@ class xbmcnfo(Agent.TV_Shows):
 					Log("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
 					return
 				#tv show name
-				try: year=nfoXML.xpath("year")[0].text
+				try: year=parse_date(nfoXML.xpath("premiered")[0].text).year
 				except: pass
 				Log('Show name: ' + tvshowname)
 				Log('Year: ' + str(year))
@@ -69,14 +74,19 @@ class xbmcnfo(Agent.TV_Shows):
 		nfoXML = xml.xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
 		path1 = String.Unquote(nfoXML.get('file'))
 		path = os.path.dirname(path1)
-
+		parse_date = lambda s: Datetime.ParseDate(s).date()
+		
 		nfoName = path + "/tvshow.nfo"
 		Log('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path)
 			nfoName = path + "/tvshow.nfo"
 			Log('Looking for TV Show NFO file at ' + nfoName)
-			if not os.path.exists(nfoName):
+		if not os.path.exists(nfoName):
+			path = os.path.dirname(path)
+			nfoName = path + "/tvshow.nfo"
+			Log('Looking for TV Show NFO file at ' + nfoName)
+		if not os.path.exists(nfoName):
 				return
 
 		# Grabs the TV Show data
@@ -114,13 +124,13 @@ class xbmcnfo(Agent.TV_Shows):
 				except:
 					Log("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
 					return
-				#tv show year
-				try: metadata.originally_available_at=nfoXML.xpath("aired")[0].text
+				#tv show year and first Aired
+				try: metadata.originally_available_at=parse_date(nfoXML.xpath("premiered")[0].text) #metadata.originally_available_at=nfoXML.xpath("aired")[0].text
 				except: pass
 				#tv show summary
 				try: metadata.summary=nfoXML.xpath("plot")[0].text
 				except: pass
-				#tv show summary
+				#tv show content rating
 				try: metadata.content_rating=nfoXML.xpath("mpaa")[0].text
 				except: pass
 				#tv show rating
