@@ -39,6 +39,7 @@ class xbmcnfo(Agent.TV_Shows):
 			nfoTextLower = nfoText.lower()
 			year = 0
 			tvshowname = None
+			tvshowid = media.id
 			if nfoTextLower.count('<tvshow') > 0 and nfoTextLower.count('</tvshow>') > 0:
 				#likely an xbmc nfo file
 				try: nfoXML = XML.ElementFromString(nfoText).xpath('//tvshow')[0]
@@ -54,18 +55,20 @@ class xbmcnfo(Agent.TV_Shows):
 				#tv show name
 				try: year=parse_date(nfoXML.xpath("premiered")[0].text).year
 				except: pass
+				#tv tv show id
+				tvshowid=nfoXML.xpath("id")[0].text
 				Log('Show name: ' + tvshowname)
 				Log('Year: ' + str(year))
 			if tvshowname:
 				name = tvshowname
-				results.Append(MetadataSearchResult(id=media.id, name=name, year=year, lang=lang, score=100))
+				results.Append(MetadataSearchResult(id=tvshowid, name=name, year=year, lang=lang, score=100))
 				for result in results:
 					Log('scraped results: ' + result.name + ' | year = ' + str(result.year) + ' | id = ' + result.id + '| score = ' + str(result.score))
 			else:
 				Log("ERROR: No <tvshow> tag in " + nfoFile + ". Aborting!")
 	
 	def update(self, metadata, media, lang):
-		id = re.compile('.xbmcnfotv\://([0-9]+)\?lang').findall(metadata.guid)[0]
+		id = media.id
 		Log('Update called for TV Show with id = ' + id)
 		pageUrl = "http://localhost:32400/library/metadata/" + id + "/tree"
 		page = HTTP.Request(pageUrl)
@@ -161,7 +164,7 @@ class xbmcnfo(Agent.TV_Shows):
 				@parallelize
 				def UpdateEpisodes():
 					Log("UpdateEpisodes called")
-					pageUrl="http://localhost:32400/library/metadata/" + metadata.id + "/children"
+					pageUrl="http://localhost:32400/library/metadata/" + media.id + "/children"
 					seasonList = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Directory')
 		
 					seasons=[]
