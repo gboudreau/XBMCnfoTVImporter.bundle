@@ -10,10 +10,11 @@ class xbmcnfo(Agent.TV_Shows):
 	name = 'XBMC TV .nfo Importer'
 	primary_provider = True
 	languages = [Locale.Language.English]
-
+	
 	def search(self, results, media, lang):
 		Log("Searching")
 	
+		parse_date = lambda s: Datetime.ParseDate(s).date()
 		pageUrl="http://localhost:32400/library/metadata/" + media.id + "/tree"
 		page=HTTP.Request(pageUrl)
 		Log(media.primary_metadata)
@@ -28,12 +29,17 @@ class xbmcnfo(Agent.TV_Shows):
 			path = os.path.dirname(path)
 			nfoName = path + "/tvshow.nfo"
 			Log('Looking for TV Show NFO file at ' + nfoName)
+		if not os.path.exists(nfoName):
+			path = os.path.dirname(path)
+			nfoName = path + "/tvshow.nfo"
+			Log('Looking for TV Show NFO file at ' + nfoName)
 		if os.path.exists(nfoName):
 			nfoFile = nfoName
 			nfoText = Core.storage.load(nfoFile)
 			nfoTextLower = nfoText.lower()
 			year = 0
 			tvshowname = None
+			tvshowid = media.id
 			if nfoTextLower.count('<tvshow') > 0 and nfoTextLower.count('</tvshow>') > 0:
 				#likely an xbmc nfo file
 				try: nfoXML = XML.ElementFromString(nfoText).xpath('//tvshow')[0]
@@ -47,20 +53,22 @@ class xbmcnfo(Agent.TV_Shows):
 					Log("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
 					return
 				#tv show name
-				try: year=nfoXML.xpath("year")[0].text
+				try: year=parse_date(nfoXML.xpath("premiered")[0].text).year
 				except: pass
+				#tv tv show id
+				tvshowid=nfoXML.xpath("id")[0].text
 				Log('Show name: ' + tvshowname)
 				Log('Year: ' + str(year))
 			if tvshowname:
 				name = tvshowname
-				results.Append(MetadataSearchResult(id=media.id, name=name, year=year, lang=lang, score=100))
+				results.Append(MetadataSearchResult(id=tvshowid, name=name, year=year, lang=lang, score=100))
 				for result in results:
 					Log('scraped results: ' + result.name + ' | year = ' + str(result.year) + ' | id = ' + result.id + '| score = ' + str(result.score))
 			else:
 				Log("ERROR: No <tvshow> tag in " + nfoFile + ". Aborting!")
 	
 	def update(self, metadata, media, lang):
-		id = re.compile('.xbmcnfotv\://([0-9]+)\?lang').findall(metadata.guid)[0]
+		id = media.id
 		Log('Update called for TV Show with id = ' + id)
 		pageUrl = "http://localhost:32400/library/metadata/" + id + "/tree"
 		page = HTTP.Request(pageUrl)
@@ -69,14 +77,19 @@ class xbmcnfo(Agent.TV_Shows):
 		nfoXML = xml.xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
 		path1 = String.Unquote(nfoXML.get('file'))
 		path = os.path.dirname(path1)
-
+		parse_date = lambda s: Datetime.ParseDate(s).date()
+		
 		nfoName = path + "/tvshow.nfo"
 		Log('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path)
 			nfoName = path + "/tvshow.nfo"
 			Log('Looking for TV Show NFO file at ' + nfoName)
-			if not os.path.exists(nfoName):
+		if not os.path.exists(nfoName):
+			path = os.path.dirname(path)
+			nfoName = path + "/tvshow.nfo"
+			Log('Looking for TV Show NFO file at ' + nfoName)
+		if not os.path.exists(nfoName):
 				return
 
 		# Grabs the TV Show data
@@ -114,13 +127,13 @@ class xbmcnfo(Agent.TV_Shows):
 				except:
 					Log("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
 					return
-				#tv show year
-				try: metadata.originally_available_at=nfoXML.xpath("aired")[0].text
+				#tv show year and first Aired
+				try: metadata.originally_available_at=parse_date(nfoXML.xpath("premiered")[0].text) #metadata.originally_available_at=nfoXML.xpath("aired")[0].text
 				except: pass
 				#tv show summary
 				try: metadata.summary=nfoXML.xpath("plot")[0].text
 				except: pass
-				#tv show summary
+				#tv show content rating
 				try: metadata.content_rating=nfoXML.xpath("mpaa")[0].text
 				except: pass
 				#tv show rating
@@ -131,7 +144,7 @@ class xbmcnfo(Agent.TV_Shows):
 				except: pass
 				Log('Title: ' + metadata.title)
 				if metadata.originally_available_at:
-					Log('Aired: ' + metadata.originally_available_at)
+					Log('Aired: ' + str(metadata.originally_available_at.year) + '-' + str(metadata.originally_available_at.month) + '-' + str(metadata.originally_available_at.day))
 
 				#actors
 				metadata.roles.clear()
@@ -151,7 +164,7 @@ class xbmcnfo(Agent.TV_Shows):
 				@parallelize
 				def UpdateEpisodes():
 					Log("UpdateEpisodes called")
-					pageUrl="http://localhost:32400/library/metadata/" + metadata.id + "/children"
+					pageUrl="http://localhost:32400/library/metadata/" + media.id + "/children"
 					seasonList = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Directory')
 		
 					seasons=[]
@@ -160,7 +173,8 @@ class xbmcnfo(Agent.TV_Shows):
 						except: pass
 						try: season_num=seasons.get('index')
 						except: pass
-
+						
+						Log("seasonID : " + path)
 						if seasonID.count('allLeaves') == 0:
 							Log("Finding episodes")
 
@@ -168,7 +182,16 @@ class xbmcnfo(Agent.TV_Shows):
 
 							episodes = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Video')
 							Log("Found " + str(len(episodes)) + " episodes.")
-			
+							
+							if(int(season_num) == 0):
+								seasonFileName = 'season-specials.tbn'
+							else:
+								seasonFileName = 'season%(number)02d.tbn' % {"number": int(season_num)}
+							seasonPathFilename = path + '/' + seasonFileName
+							if os.path.exists(seasonPathFilename):
+								seasonData = Core.storage.load(seasonPathFilename)
+								metadata.seasons[season_num].posters[seasonFileName] = Proxy.Media(seasonData)
+								Log('Found season image at ' + seasonPathFilename)
 							episodeXML = []
 							for episodeXML in episodes:
 								ep_num = episodeXML.get('index')
