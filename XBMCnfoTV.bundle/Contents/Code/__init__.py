@@ -9,7 +9,7 @@ import os, re, os.path, time, datetime
 class xbmcnfo(Agent.TV_Shows):
 	name = 'XBMC TV .nfo Importer'
 	primary_provider = True
-	languages = [Locale.Language.English]
+	languages = [Locale.Language.NoLanguage]
 	
 	def search(self, results, media, lang):
 		Log("Searching")
