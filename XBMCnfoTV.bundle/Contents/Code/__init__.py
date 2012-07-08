@@ -33,13 +33,21 @@ class xbmcnfo(Agent.TV_Shows):
 			path = os.path.dirname(path)
 			nfoName = path + "/tvshow.nfo"
 			Log('Looking for TV Show NFO file at ' + nfoName)
-		if os.path.exists(nfoName):
+
+		tvshowid = media.id
+		year = 0
+		tvshowname = None
+
+		if not os.path.exists(nfoName):
+			Log("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
+			path = os.path.dirname(path1)
+			tvshowname = os.path.basename(path)
+			Log("Using tvshow.title = " + tvshowname)
+		else:
 			nfoFile = nfoName
+			Log("Found nfo file at " + nfoFile)
 			nfoText = Core.storage.load(nfoFile)
 			nfoTextLower = nfoText.lower()
-			year = 0
-			tvshowname = None
-			tvshowid = media.id
 			if nfoTextLower.count('<tvshow') > 0 and nfoTextLower.count('</tvshow>') > 0:
 				#likely an xbmc nfo file
 				try: nfoXML = XML.ElementFromString(nfoText).xpath('//tvshow')[0]
@@ -59,13 +67,11 @@ class xbmcnfo(Agent.TV_Shows):
 				tvshowid=nfoXML.xpath("id")[0].text
 				Log('Show name: ' + tvshowname)
 				Log('Year: ' + str(year))
-			if tvshowname:
-				name = tvshowname
-				results.Append(MetadataSearchResult(id=tvshowid, name=name, year=year, lang=lang, score=100))
-				for result in results:
-					Log('scraped results: ' + result.name + ' | year = ' + str(result.year) + ' | id = ' + result.id + '| score = ' + str(result.score))
-			else:
-				Log("ERROR: No <tvshow> tag in " + nfoFile + ". Aborting!")
+
+		results.Append(MetadataSearchResult(id=tvshowid, name=tvshowname, year=year, lang=lang, score=100))
+
+		for result in results:
+			Log('scraped results: ' + result.name + ' | year = ' + str(result.year) + ' | id = ' + result.id + '| score = ' + str(result.score))
 	
 	def update(self, metadata, media, lang):
 		id = media.id
@@ -90,7 +96,7 @@ class xbmcnfo(Agent.TV_Shows):
 			nfoName = path + "/tvshow.nfo"
 			Log('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
-				return
+			path = os.path.dirname(path1)
 
 		# Grabs the TV Show data
 		posterFilename = path + "/folder.jpg"
@@ -111,7 +117,12 @@ class xbmcnfo(Agent.TV_Shows):
 			metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
 			Log('Found fanart image at ' + fanartFilename)
 
-		if os.path.exists(nfoName):
+		if not os.path.exists(nfoName):
+			Log("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
+			path = os.path.dirname(path1)
+			metadata.title = os.path.basename(path)
+			Log("Using tvshow.title = " + metadata.title)
+		else:
 			nfoFile = nfoName
 			nfoText = Core.storage.load(nfoFile)
 			nfoTextLower = nfoText.lower()
@@ -160,124 +171,124 @@ class xbmcnfo(Agent.TV_Shows):
 						#data = HTTP.Request(actor.xpath("thumb")[0].text)
 						#Log('Added Thumbnail for: ' + role.actor)
 
-				# Grabs the season data
-				@parallelize
-				def UpdateEpisodes():
-					Log("UpdateEpisodes called")
-					pageUrl="http://localhost:32400/library/metadata/" + media.id + "/children"
-					seasonList = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Directory')
-		
-					seasons=[]
-					for seasons in seasonList:
-						try: seasonID=seasons.get('key')
-						except: pass
-						try: season_num=seasons.get('index')
-						except: pass
-						
-						Log("seasonID : " + path)
-						if seasonID.count('allLeaves') == 0:
-							Log("Finding episodes")
+		# Grabs the season data
+		@parallelize
+		def UpdateEpisodes():
+			Log("UpdateEpisodes called")
+			pageUrl="http://localhost:32400/library/metadata/" + media.id + "/children"
+			seasonList = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Directory')
 
-							pageUrl="http://localhost:32400" + seasonID
-
-							episodes = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Video')
-							Log("Found " + str(len(episodes)) + " episodes.")
-							
-							if(int(season_num) == 0):
-								seasonFileName = 'season-specials.tbn'
-							else:
-								seasonFileName = 'season%(number)02d.tbn' % {"number": int(season_num)}
-							seasonPathFilename = path + '/' + seasonFileName
-							if os.path.exists(seasonPathFilename):
-								seasonData = Core.storage.load(seasonPathFilename)
-								metadata.seasons[season_num].posters[seasonFileName] = Proxy.Media(seasonData)
-								Log('Found season image at ' + seasonPathFilename)
-							episodeXML = []
-							for episodeXML in episodes:
-								ep_num = episodeXML.get('index')
-								ep_key = episodeXML.get('key')
+			seasons=[]
+			for seasons in seasonList:
+				try: seasonID=seasons.get('key')
+				except: pass
+				try: season_num=seasons.get('index')
+				except: pass
 				
-								Log("Found episode with key: " + ep_key)
-			
-								# Get the episode object from the model
-								episode = metadata.seasons[season_num].episodes[ep_num]				
+				Log("seasonID : " + path)
+				if seasonID.count('allLeaves') == 0:
+					Log("Finding episodes")
 
-								# Grabs the episode information
-								@task
-								def UpdateEpisode(episode=episode, season_num=season_num, ep_num=ep_num, ep_key=ep_key, path=path1):
-									Log("UpdateEpisode called for episode S" + str(season_num) + "E" + str(ep_num))
-									if(ep_num.count('allLeaves') == 0):
-										pageUrl="http://localhost:32400" + ep_key + "/tree"
-										path1 = XML.ElementFromURL(pageUrl).xpath('//MediaPart')[0].get('file')
-										Log('UPDATE: ' + path1)
-										filepath=path1.split
-										path = os.path.dirname(path1)
-										id=ep_num
-										fileExtension = path1.split(".")[-1].lower()
+					pageUrl="http://localhost:32400" + seasonID
 
-										nfoFile = path1.replace('.'+fileExtension, '.nfo')
-										Log("Looking for episode NFO file " + nfoFile)
-										if os.path.exists(nfoFile):
-											Log("File exists...")
-											nfoText = Core.storage.load(nfoFile)
-											nfoTextLower = nfoText.lower()
-											if nfoTextLower.count('<episodedetails') > 0 and nfoTextLower.count('</episodedetails>') > 0:
-												Log("Looks like an XBMC NFO file (has <episodedetails>)")
-												#likely an xbmc nfo file
-												try: nfoXML = XML.ElementFromString(nfoText).xpath('//episodedetails')[0]
-												except:
-													Log('ERROR: Cant parse XML in file: ' + nfoFile)
-													return
+					episodes = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Video')
+					Log("Found " + str(len(episodes)) + " episodes.")
+					
+					if(int(season_num) == 0):
+						seasonFileName = 'season-specials.tbn'
+					else:
+						seasonFileName = 'season%(number)02d.tbn' % {"number": int(season_num)}
+					seasonPathFilename = path + '/' + seasonFileName
+					if os.path.exists(seasonPathFilename):
+						seasonData = Core.storage.load(seasonPathFilename)
+						metadata.seasons[season_num].posters[seasonFileName] = Proxy.Media(seasonData)
+						Log('Found season image at ' + seasonPathFilename)
+					episodeXML = []
+					for episodeXML in episodes:
+						ep_num = episodeXML.get('index')
+						ep_key = episodeXML.get('key')
+		
+						Log("Found episode with key: " + ep_key)
+	
+						# Get the episode object from the model
+						episode = metadata.seasons[season_num].episodes[ep_num]				
 
-												#title
-												try: episode.title = nfoXML.xpath('./title')[0].text
-												except: pass
-												#summary
-												try: episode.summary = nfoXML.xpath('./plot')[0].text
-												except: pass			
-												#year
-												try:
-													try:
-														air_date = time.strptime(nfoXML.xpath("releasedate")[0].text, "%d %B %Y")
-													except:
-														air_date = time.strptime(nfoXML.xpath("releasedate")[0].text, "%Y-%m-%d")
-													if air_date:
-														episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(air_date)).date()
-												except: pass
-												#content rating
-												try: episode.content_rating = nfoXML.xpath('./mpaa')[0].text
-												except: pass
-												#studio
-												try: episode.studio = nfoXML.findall("studio")[0].text
-												except: pass
-												#airdate
-												try:
-													runtime = nfoXML.findall("runtime")[0].text
-													episode.duration = int(re.compile('^([0-9]+)').findall(runtime)[0]) * 60 * 1000 # ms
+						# Grabs the episode information
+						@task
+						def UpdateEpisode(episode=episode, season_num=season_num, ep_num=ep_num, ep_key=ep_key, path=path1):
+							Log("UpdateEpisode called for episode S" + str(season_num) + "E" + str(ep_num))
+							if(ep_num.count('allLeaves') == 0):
+								pageUrl="http://localhost:32400" + ep_key + "/tree"
+								path1 = XML.ElementFromURL(pageUrl).xpath('//MediaPart')[0].get('file')
+								Log('UPDATE: ' + path1)
+								filepath=path1.split
+								path = os.path.dirname(path1)
+								id=ep_num
+								fileExtension = path1.split(".")[-1].lower()
+
+								nfoFile = path1.replace('.'+fileExtension, '.nfo')
+								Log("Looking for episode NFO file " + nfoFile)
+								if os.path.exists(nfoFile):
+									Log("File exists...")
+									nfoText = Core.storage.load(nfoFile)
+									nfoTextLower = nfoText.lower()
+									if nfoTextLower.count('<episodedetails') > 0 and nfoTextLower.count('</episodedetails>') > 0:
+										Log("Looks like an XBMC NFO file (has <episodedetails>)")
+										#likely an xbmc nfo file
+										try: nfoXML = XML.ElementFromString(nfoText).xpath('//episodedetails')[0]
+										except:
+											Log('ERROR: Cant parse XML in file: ' + nfoFile)
+											return
+
+										#title
+										try: episode.title = nfoXML.xpath('./title')[0].text
+										except: pass
+										#summary
+										try: episode.summary = nfoXML.xpath('./plot')[0].text
+										except: pass			
+										#year
+										try:
+											try:
+												air_date = time.strptime(nfoXML.xpath("releasedate")[0].text, "%d %B %Y")
+											except:
+												air_date = time.strptime(nfoXML.xpath("releasedate")[0].text, "%Y-%m-%d")
+											if air_date:
+												episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(air_date)).date()
+										except: pass
+										#content rating
+										try: episode.content_rating = nfoXML.xpath('./mpaa')[0].text
+										except: pass
+										#studio
+										try: episode.studio = nfoXML.findall("studio")[0].text
+										except: pass
+										#airdate
+										try:
+											runtime = nfoXML.findall("runtime")[0].text
+											episode.duration = int(re.compile('^([0-9]+)').findall(runtime)[0]) * 60 * 1000 # ms
+										except: pass
+
+										thumbFilename = nfoFile.replace('.nfo', '.tbn')
+										if os.path.exists(thumbFilename):
+											Log("Found episode thumb " + thumbFilename)
+											episode.thumbs[thumbFilename] = Proxy.Media(Core.storage.load(thumbFilename))
+										else:
+											m = nfoXML.findall("episodedetails/thumb")
+											if len(m) > 0:
+												thumbURL = m[0].text
+												Log("Found episode thumb " + thumbURL)
+												try: episode.thumbs[thumbURL] = Proxy.Media(HTTP.Request(thumbURL))
 												except: pass
 
-												thumbFilename = nfoFile.replace('.nfo', '.tbn')
-												if os.path.exists(thumbFilename):
-													Log("Found episode thumb " + thumbFilename)
-													episode.thumbs[thumbFilename] = Proxy.Media(Core.storage.load(thumbFilename))
-												else:
-													m = nfoXML.findall("episodedetails/thumb")
-													if len(m) > 0:
-														thumbURL = m[0].text
-														Log("Found episode thumb " + thumbURL)
-														try: episode.thumbs[thumbURL] = Proxy.Media(HTTP.Request(thumbURL))
-														except: pass
-
-												Log("++++++++++++++++++++++++")
-												Log("TV Episode nfo Information")
-												Log("------------------------")
-												Log("Title: " + str(episode.title))
-												Log("Summary: " + str(episode.summary))
-												Log("Year: " + str(episode.originally_available_at))
-												Log("IMDB rating: " + str(episode.rating))
-												# Log("Actors")
-												# for r in episode.roles:
-												#	Log("Actor: " + r.actor + " | Role: " + r.role)
-												Log("++++++++++++++++++++++++")
-											else:
-												Log("ERROR: <episodedetails> tag not found in episode NFO file " + nfoFile)
+										Log("++++++++++++++++++++++++")
+										Log("TV Episode nfo Information")
+										Log("------------------------")
+										Log("Title: " + str(episode.title))
+										Log("Summary: " + str(episode.summary))
+										Log("Year: " + str(episode.originally_available_at))
+										Log("IMDB rating: " + str(episode.rating))
+										# Log("Actors")
+										# for r in episode.roles:
+										#	Log("Actor: " + r.actor + " | Role: " + r.role)
+										Log("++++++++++++++++++++++++")
+									else:
+										Log("ERROR: <episodedetails> tag not found in episode NFO file " + nfoFile)
