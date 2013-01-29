@@ -20,7 +20,7 @@ class xbmcnfo(Agent.TV_Shows):
 		Log(media.primary_metadata)
 		Log(XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MetadataItem'))
 		nfoXML = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
-		path1 = String.Unquote(nfoXML.get('file'))
+		path1 = String.Unquote(nfoXML.get('file')).encode('utf-8')
 		Log(path1)
 		path = os.path.dirname(path1)
 		nfoName = path + "/tvshow.nfo"
@@ -64,8 +64,15 @@ class xbmcnfo(Agent.TV_Shows):
 				try: year=parse_date(nfoXML.xpath("premiered")[0].text).year
 				except: pass
 				#tv tv show id
-				tvshowid=nfoXML.xpath("id")[0].text
+				try: tvshowid=nfoXML.xpath("id")[0].text
+				except:
+					# if tv show id doesn't exist, create
+					# one based on hash of tvshowname
+					ord3 = lambda x : '%.3d' % ord(x) 
+					tvshowid=int(''.join(map(ord3, tvshowname)))
+					tvshowid=str(abs(hash(int(tvshowid))))
 				Log('Show name: ' + tvshowname)
+				Log('Show ID: ' + tvshowid)
 				Log('Year: ' + str(year))
 
 		results.Append(MetadataSearchResult(id=tvshowid, name=tvshowname, year=year, lang=lang, score=100))
@@ -98,18 +105,39 @@ class xbmcnfo(Agent.TV_Shows):
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path1)
 
-		# Grabs the TV Show data
+		# If media files are in Season folders, look in root for show 
+		# image
+		posterFilename = path + "/../folder.jpg"
+		if os.path.exists(posterFilename):
+			posterData = Core.storage.load(posterFilename)
+			metadata.posters['folder.jpg'] = Proxy.Media(posterData)
+			Log('Found poster image at path ' + posterFilename)
+
+		# Grabs the TV Show data (season specific), which would
+		# overwrite the show if found in root.
 		posterFilename = path + "/folder.jpg"
 		if os.path.exists(posterFilename):
 			posterData = Core.storage.load(posterFilename)
 			metadata.posters['folder.jpg'] = Proxy.Media(posterData)
 			Log('Found poster image at ' + posterFilename)
 
+		bannerFilename = path + "/../folder-banner.jpg"
+		if os.path.exists(bannerFilename):
+			bannerData = Core.storage.load(bannerFilename)
+			metadata.banners['folder-banner.jpg'] = Proxy.Media(bannerData)
+			Log('Found banner image at ' + bannerFilename)
+
 		bannerFilename = path + "/folder-banner.jpg"
 		if os.path.exists(bannerFilename):
 			bannerData = Core.storage.load(bannerFilename)
 			metadata.banners['folder-banner.jpg'] = Proxy.Media(bannerData)
 			Log('Found banner image at ' + bannerFilename)
+
+		fanartFilename = path + "/../fanart.jpg"
+		if os.path.exists(fanartFilename):
+			fanartData = Core.storage.load(fanartFilename)
+			metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
+			Log('Found fanart image at ' + fanartFilename)
 
 		fanartFilename = path + "/fanart.jpg"
 		if os.path.exists(fanartFilename):
