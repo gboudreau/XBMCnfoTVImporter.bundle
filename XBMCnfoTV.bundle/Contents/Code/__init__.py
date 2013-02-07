@@ -107,30 +107,30 @@ class xbmcnfo(Agent.TV_Shows):
 
 		# If media files are in Season folders, look in root for show 
 		# image
-		posterFilename = path + "/../folder.jpg"
+		posterFilename = path + "/../poster.jpg"
 		if os.path.exists(posterFilename):
 			posterData = Core.storage.load(posterFilename)
-			metadata.posters['folder.jpg'] = Proxy.Media(posterData)
+			metadata.posters['poster.jpg'] = Proxy.Media(posterData)
 			Log('Found poster image at path ' + posterFilename)
 
 		# Grabs the TV Show data (season specific), which would
 		# overwrite the show if found in root.
-		posterFilename = path + "/folder.jpg"
+		posterFilename = path + "/poster.jpg"
 		if os.path.exists(posterFilename):
 			posterData = Core.storage.load(posterFilename)
-			metadata.posters['folder.jpg'] = Proxy.Media(posterData)
+			metadata.posters['poster.jpg'] = Proxy.Media(posterData)
 			Log('Found poster image at ' + posterFilename)
 
-		bannerFilename = path + "/../folder-banner.jpg"
+		bannerFilename = path + "/../banner.jpg"
 		if os.path.exists(bannerFilename):
 			bannerData = Core.storage.load(bannerFilename)
-			metadata.banners['folder-banner.jpg'] = Proxy.Media(bannerData)
+			metadata.banners['banner.jpg'] = Proxy.Media(bannerData)
 			Log('Found banner image at ' + bannerFilename)
 
-		bannerFilename = path + "/folder-banner.jpg"
+		bannerFilename = path + "/banner.jpg"
 		if os.path.exists(bannerFilename):
 			bannerData = Core.storage.load(bannerFilename)
-			metadata.banners['folder-banner.jpg'] = Proxy.Media(bannerData)
+			metadata.banners['banner.jpg'] = Proxy.Media(bannerData)
 			Log('Found banner image at ' + bannerFilename)
 
 		fanartFilename = path + "/../fanart.jpg"
@@ -223,9 +223,9 @@ class xbmcnfo(Agent.TV_Shows):
 					Log("Found " + str(len(episodes)) + " episodes.")
 					
 					if(int(season_num) == 0):
-						seasonFileName = 'season-specials.tbn'
+						seasonFileName = 'season-specials-poster.jpg'
 					else:
-						seasonFileName = 'season%(number)02d.tbn' % {"number": int(season_num)}
+						seasonFileName = 'season%(number)02d-poster.jpg' % {"number": int(season_num)}
 					seasonPathFilename = path + '/' + seasonFileName
 					if os.path.exists(seasonPathFilename):
 						seasonData = Core.storage.load(seasonPathFilename)
@@ -295,7 +295,7 @@ class xbmcnfo(Agent.TV_Shows):
 											episode.duration = int(re.compile('^([0-9]+)').findall(runtime)[0]) * 60 * 1000 # ms
 										except: pass
 
-										thumbFilename = nfoFile.replace('.nfo', '.tbn')
+										thumbFilename = nfoFile.replace('.nfo', '-thumb.jpg')
 										if os.path.exists(thumbFilename):
 											Log("Found episode thumb " + thumbFilename)
 											episode.thumbs[thumbFilename] = Proxy.Media(Core.storage.load(thumbFilename))
