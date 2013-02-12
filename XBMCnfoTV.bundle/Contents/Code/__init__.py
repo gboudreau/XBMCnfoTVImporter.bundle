@@ -111,6 +111,10 @@ class xbmcnfo(Agent.TV_Shows):
 			posterFilename = path + "/../season-all-poster.jpg"
 		if os.path.exists(path + "/season-all-poster.jpg"):
 			posterFilename = path + "/season-all-poster.jpg"
+		if os.path.exists(path + "/../folder.jpg"):
+			posterFilename = path + "/../folder.jpg"
+		if os.path.exists(path + "/folder.jpg"):
+			posterFilename = path + "/folder.jpg"
 		if os.path.exists(path + "/../poster.jpg"):
 			posterFilename = path + "/../poster.jpg"
 		if os.path.exists(path + "/poster.jpg"):
@@ -121,6 +125,10 @@ class xbmcnfo(Agent.TV_Shows):
 			Log('Found poster image at ' + posterFilename)
 
 		bannerFilename = ""
+		if os.path.exists(path + "/../folder-banner.jpg"):
+			bannerFilename = path + "/../folder-banner.jpg"
+		if os.path.exists(path + "/folder-banner.jpg"):
+			bannerFilename = path + "/folder-banner.jpg"
 		if os.path.exists(path + "/../banner.jpg"):
 			bannerFilename = path + "/../banner.jpg"
 		if os.path.exists(path + "/banner.jpg"):
