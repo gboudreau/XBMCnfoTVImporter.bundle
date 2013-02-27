@@ -16,12 +16,8 @@ class xbmcnfo(Agent.TV_Shows):
 		Log("Searching")
 	
 		parse_date = lambda s: Datetime.ParseDate(s).date()
-		pageUrl="http://localhost:32400/library/metadata/" + media.id + "/tree"
-		page=HTTP.Request(pageUrl)
 		Log(media.primary_metadata)
-		Log(XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MetadataItem'))
-		nfoXML = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
-		path1 = String.Unquote(nfoXML.get('file')).encode('utf-8')
+		path1 = String.Unquote(media.filename).encode('utf-8')
 		Log(path1)
 		path = os.path.dirname(path1)
 		nfoName = path + "/tvshow.nfo"
@@ -84,12 +80,7 @@ class xbmcnfo(Agent.TV_Shows):
 	def update(self, metadata, media, lang):
 		id = media.id
 		Log('Update called for TV Show with id = ' + id)
-		pageUrl = "http://localhost:32400/library/metadata/" + id + "/tree"
-		page = HTTP.Request(pageUrl)
-		xml = XML.ElementFromURL(pageUrl)
-		#Log('xml = ' + XML.StringFromElement(xml))
-		nfoXML = xml.xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
-		path1 = String.Unquote(nfoXML.get('file'))
+		path1 = media.items[0].parts[0].file
 		path = os.path.dirname(path1)
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		
