@@ -44,8 +44,13 @@ class xbmcnfo(Agent.TV_Shows):
 			nfoFile = nfoName
 			Log("Found nfo file at " + nfoFile)
 			nfoText = Core.storage.load(nfoFile)
+			# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
+			nfoText = re.sub(r'&([^a-zA-Z#])', r'&amp;\1', nfoText)
 			nfoTextLower = nfoText.lower()
 			if nfoTextLower.count('<tvshow') > 0 and nfoTextLower.count('</tvshow>') > 0:
+				# Remove URLs (or other stuff) at the end of the XML file
+				nfoText = '%s</tvshow>' % nfoText.split('</tvshow>')[0]
+				
 				#likely an xbmc nfo file
 				try: nfoXML = XML.ElementFromString(nfoText).xpath('//tvshow')[0]
 				except:
@@ -73,9 +78,7 @@ class xbmcnfo(Agent.TV_Shows):
 				Log('Year: ' + str(year))
 
 		results.Append(MetadataSearchResult(id=tvshowid, name=tvshowname, year=year, lang=lang, score=100))
-
-		for result in results:
-			Log('scraped results: ' + result.name + ' | year = ' + str(result.year) + ' | id = ' + result.id + '| score = ' + str(result.score))
+		Log('scraped results: ' + tvshowname + ' | year = ' + str(year) + ' | id = ' + tvshowid)
 	
 	def update(self, metadata, media, lang):
 		id = media.id
@@ -147,14 +150,18 @@ class xbmcnfo(Agent.TV_Shows):
 		else:
 			nfoFile = nfoName
 			nfoText = Core.storage.load(nfoFile)
+			# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
+			nfoText = re.sub(r'&([^a-zA-Z#])', r'&amp;\1', nfoText)
 			nfoTextLower = nfoText.lower()
 			if nfoTextLower.count('<tvshow') > 0 and nfoTextLower.count('</tvshow>') > 0:
+				# Remove URLs (or other stuff) at the end of the XML file
+				nfoText = '%s</tvshow>' % nfoText.split('</tvshow>')[0]
+
 				#likely an xbmc nfo file
 				try: nfoXML = XML.ElementFromString(nfoText).xpath('//tvshow')[0]
 				except:
 					Log('ERROR: Cant parse XML in ' + nfoFile + '. Aborting!')
 					return
-				#Log(nfoXML.xpath("title"))
 				#tv show name
 				try: metadata.title=nfoXML.xpath("title")[0].text
 				except:
@@ -266,8 +273,13 @@ class xbmcnfo(Agent.TV_Shows):
 								if os.path.exists(nfoFile):
 									Log("File exists...")
 									nfoText = Core.storage.load(nfoFile)
+									# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
+									nfoText = re.sub(r'&([^a-zA-Z#])', r'&amp;\1', nfoText)
 									nfoTextLower = nfoText.lower()
 									if nfoTextLower.count('<episodedetails') > 0 and nfoTextLower.count('</episodedetails>') > 0:
+										# Remove URLs (or other stuff) at the end of the XML file
+										nfoText = '%s</episodedetails>' % nfoText.split('</episodedetails>')[0]
+
 										Log("Looks like an XBMC NFO file (has <episodedetails>)")
 										#likely an xbmc nfo file
 										try: nfoXML = XML.ElementFromString(nfoText).xpath('//episodedetails')[0]
