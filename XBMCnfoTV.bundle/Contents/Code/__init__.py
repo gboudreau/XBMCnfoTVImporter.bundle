@@ -83,7 +83,9 @@ class xbmcnfo(Agent.TV_Shows):
 	def update(self, metadata, media, lang):
 		id = media.id
 		Log('Update called for TV Show with id = ' + id)
-		path1 = media.seasons[1].episodes[1].items[0].parts[0].file
+		try: path1 = media.items[0].parts[0].file
+		except:
+			path1 = media.seasons[1].episodes[1].items[0].parts[0].file
 		path = os.path.dirname(path1)
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		
