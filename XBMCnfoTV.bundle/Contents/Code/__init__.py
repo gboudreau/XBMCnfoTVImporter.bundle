@@ -82,10 +82,27 @@ class xbmcnfo(Agent.TV_Shows):
 	
 	def update(self, metadata, media, lang):
 		id = media.id
+	
+	def update(self, metadata, media, lang):
+		id = media.id
+		pageUrl="http://localhost:32400/library/metadata/" + media.id + "/children"
+		seasonList = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Directory')
+		seasons=[]
+		for seasons in seasonList:
+			try: seasonID=seasons.get('key')
+			except: pass
+			try: season_num=seasons.get('index')
+			except: pass
+		pageUrl="http://localhost:32400" + seasonID
+		episodes = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Video')
+		episodeXML = []
+		for episodeXML in episodes:
+			episode_num = episodeXML.get('index')
+
 		Log('Update called for TV Show with id = ' + id)
 		try: path1 = media.items[0].parts[0].file
 		except:
-			path1 = media.seasons[1].episodes[1].items[0].parts[0].file
+			path1 = media.seasons[season_num].episodes[episode_num].items[0].parts[0].file
 		path = os.path.dirname(path1)
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		
