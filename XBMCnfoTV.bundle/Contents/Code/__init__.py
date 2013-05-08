@@ -143,7 +143,7 @@ class xbmcnfo(Agent.TV_Shows):
 			fanartFilename = path + "/fanart.jpg"
 		if fanartFilename:
 			fanartData = Core.storage.load(fanartFilename)
-			metadata.banners['fanart.jpg'] = Proxy.Media(fanartData)
+			metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
 			Log('Found fanart image at ' + fanartFilename)
 
 		if not os.path.exists(nfoName):
@@ -315,7 +315,7 @@ class xbmcnfo(Agent.TV_Shows):
 										#airdate
 										try:
 											runtime = nfoXML.findall("runtime")[0].text
-											episode.duration = int(re.compile('^([0-9]+)').findall(runtime)[0]) * 60 * 1000 # ms
+											metadata.duration = int(re.compile('^([0-9]+)').findall(runtime)[0]) * 1000 # ms
 										except: pass
 
 										thumbFilenameEden = nfoFile.replace('.nfo', '.tbn')
@@ -343,6 +343,7 @@ class xbmcnfo(Agent.TV_Shows):
 										Log("Summary: " + str(episode.summary))
 										Log("Year: " + str(episode.originally_available_at))
 										Log("IMDB rating: " + str(episode.rating))
+										Log("Runtime (NFO Value): " + str(runtime))
 										# Log("Actors")
 										# for r in episode.roles:
 										#	Log("Actor: " + r.actor + " | Role: " + r.role)
