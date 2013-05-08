@@ -143,7 +143,7 @@ class xbmcnfo(Agent.TV_Shows):
 			fanartFilename = path + "/fanart.jpg"
 		if fanartFilename:
 			fanartData = Core.storage.load(fanartFilename)
-			metadata.banners['fanart.jpg'] = Proxy.Media(fanartData)
+			metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
 			Log('Found fanart image at ' + fanartFilename)
 
 		if not os.path.exists(nfoName):
