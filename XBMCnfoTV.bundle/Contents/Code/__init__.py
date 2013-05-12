@@ -79,9 +79,14 @@ class xbmcnfo(Agent.TV_Shows):
 
 		results.Append(MetadataSearchResult(id=tvshowid, name=tvshowname, year=year, lang=lang, score=100))
 		Log('scraped results: ' + tvshowname + ' | year = ' + str(year) + ' | id = ' + tvshowid)
-	
+
 	def update(self, metadata, media, lang):
+		Dict.Reset()
 		id = media.id
+		duration_key = 'duration_'+id
+		epcount_key = 'epcount_'+id
+		Dict[duration_key] = 0
+		Dict[epcount_key] = 0
 		Log('Update called for TV Show with id = ' + id)
 		try: path1 = media.items[0].parts[0].file
 		except:
@@ -253,7 +258,6 @@ class xbmcnfo(Agent.TV_Shows):
 					for episodeXML in episodes:
 						ep_num = episodeXML.get('index')
 						ep_key = episodeXML.get('key')
-		
 						Log("Found episode with key: " + ep_key)
 	
 						# Get the episode object from the model
@@ -262,14 +266,13 @@ class xbmcnfo(Agent.TV_Shows):
 						# Grabs the episode information
 						@task
 						def UpdateEpisode(episode=episode, season_num=season_num, ep_num=ep_num, ep_key=ep_key, path=path1):
-							Log("UpdateEpisode called for episode S" + str(season_num) + "E" + str(ep_num))
+							Log("UpdateEpisode called for episode S" + str(season_num.zfill(2)) + "E" + str(ep_num.zfill(2)))
 							if(ep_num.count('allLeaves') == 0):
 								pageUrl="http://localhost:32400" + ep_key + "/tree"
 								path1 = XML.ElementFromURL(pageUrl).xpath('//MediaPart')[0].get('file')
 								Log('UPDATE: ' + path1)
 								filepath=path1.split
 								path = os.path.dirname(path1)
-								id=ep_num
 								fileExtension = path1.split(".")[-1].lower()
 
 								nfoFile = path1.replace('.'+fileExtension, '.nfo')
@@ -296,7 +299,7 @@ class xbmcnfo(Agent.TV_Shows):
 										except: pass
 										#summary
 										try: episode.summary = nfoXML.xpath('./plot')[0].text
-										except: pass			
+										except: pass
 										#year
 										try:
 											try:
@@ -312,10 +315,21 @@ class xbmcnfo(Agent.TV_Shows):
 										#studio
 										try: episode.studio = nfoXML.findall("studio")[0].text
 										except: pass
-										#airdate
+										#runtime
 										try:
 											runtime = nfoXML.findall("runtime")[0].text
-											metadata.duration = int(re.compile('^([0-9]+)').findall(runtime)[0]) * 1000 # ms
+											duration = int(re.compile('^([0-9]+)').findall(runtime)[0])
+											if (duration <= 2):
+												duration = duration * 60 * 60 * 1000 #h to ms
+											elif (duration <= 120):
+												duration = duration * 60 * 1000 #m to ms
+											elif (duration <= 7200):
+												duration = duration * 1000 #s to ms
+											Dict[duration_key] = Dict[duration_key] + duration
+											if (duration > 0):
+												Dict[epcount_key] = Dict[epcount_key] + 1
+											else:
+												Log ("ID:" + str(id) + " S" + str (season_num) + "E" + str (ep_num) + ": Runtime 0 in nfo!")
 										except: pass
 
 										thumbFilenameEden = nfoFile.replace('.nfo', '.tbn')
@@ -335,18 +349,28 @@ class xbmcnfo(Agent.TV_Shows):
 												Log("Found episode thumb " + thumbURL)
 												try: episode.thumbs[thumbURL] = Proxy.Media(HTTP.Request(thumbURL))
 												except: pass
-
-										Log("++++++++++++++++++++++++")
-										Log("TV Episode nfo Information")
-										Log("------------------------")
-										Log("Title: " + str(episode.title))
-										Log("Summary: " + str(episode.summary))
-										Log("Year: " + str(episode.originally_available_at))
-										Log("IMDB rating: " + str(episode.rating))
-										Log("Runtime (NFO Value): " + str(runtime))
-										# Log("Actors")
-										# for r in episode.roles:
-										#	Log("Actor: " + r.actor + " | Role: " + r.role)
-										Log("++++++++++++++++++++++++")
+										try:
+												ep_summary = episode.summary.replace("\n", " ")
+										except:
+												ep_summary = episode.summary
+										indent = '{:>61}'.format('')
+										logtext = ("" +
+										"+++++++++++++++++++++++++++++++++\n" + indent +
+										"TV Episode S" + season_num.zfill(2) + "E" + ep_num.zfill(2) + " nfo Information\n" + indent +
+										"---------------------------------\n" + indent +
+										"Title: " + str(episode.title) + "\n" + indent +
+										"Summary: " + str(ep_summary) + "\n" + indent +
+										"Year: " + str(episode.originally_available_at) + "\n" + indent +
+										"IMDB rating: " + str(episode.rating) + "\n" + indent +
+										"Runtime (NFO Value): " + str(runtime) + "\n" + indent +
+										"+++++++++++++++++++++++++++++++++")
+										Log(logtext)
 									else:
 										Log("ERROR: <episodedetails> tag not found in episode NFO file " + nfoFile)
+
+		# Final Steps
+		try:
+			metadata.duration = int(Dict[duration_key] / Dict[epcount_key])
+			Log("Episode Runtime (avg in ms): " + str(metadata.duration))
+		except: pass
+		Dict.Reset()
