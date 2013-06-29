@@ -158,6 +158,14 @@ class xbmcnfo(Agent.TV_Shows):
 			metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
 			Log('Found fanart image at ' + fanartFilename)
 
+		themeFilename = ""
+		if os.path.exists(path + "/theme.mp3"):
+			themeFilename = path + "/theme.mp3"
+		if themeFilename:
+			themeData = Core.storage.load(themeFilename)
+			metadata.themes['theme.mp3'] = Proxy.Media(themeData)
+			Log('Found theme music ' + themeFilename)
+
 		if not os.path.exists(nfoName):
 			Log("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
 			path = os.path.dirname(path1)
