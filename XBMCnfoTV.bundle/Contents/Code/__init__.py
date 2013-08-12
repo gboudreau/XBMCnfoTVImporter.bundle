@@ -4,6 +4,7 @@
 # Original code author: Harley Hooligan
 # Modified by Guillaume Boudreau
 # Eden and Frodo compatibility added by Jorge Amigo
+# Cleanup and some extensions by SlrG
 #
 import os, re, time, datetime
 
@@ -11,7 +12,9 @@ class xbmcnfo(Agent.TV_Shows):
 	name = 'XBMC TV .nfo Importer'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
+	accepts_from = ['com.plexapp.agents.localmedia']
 
+##### helper functions #####
 	def time_convert (self, duration):
 		if (duration <= 2):
 			duration = duration * 60 * 60 * 1000 #h to ms
@@ -21,23 +24,32 @@ class xbmcnfo(Agent.TV_Shows):
 			duration = duration * 1000 #s to ms
 		return duration
 
+	def checkFilePaths(self, pathfns, ftype):
+		for pathfn in pathfns:
+			Log("Trying " + pathfn)
+			if not os.path.exists(pathfn):
+				continue
+			else:
+				Log("Found " + ftype + " file " + pathfn)
+				return pathfn
+		else:
+			Log("No " + ftype + " file found! Aborting!")
+
+##### search function #####
 	def search(self, results, media, lang):
-		Log("Searching")
-	
+		Log("++++++++++++++++++++++++")
+		Log("Entering search function")
+		Log("++++++++++++++++++++++++")
+
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		Log(media.primary_metadata)
-		path1 = String.Unquote(media.filename).encode('utf-8')
+		path1 = os.path.dirname(String.Unquote(media.filename).encode('utf-8'))
 		Log(path1)
 		path = os.path.dirname(path1)
 		nfoName = path + "/tvshow.nfo"
 		Log('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
-			path = os.path.dirname(path)
-			nfoName = path + "/tvshow.nfo"
-			Log('Looking for TV Show NFO file at ' + nfoName)
-		if not os.path.exists(nfoName):
-			path = os.path.dirname(path)
-			nfoName = path + "/tvshow.nfo"
+			nfoName = path1 + "/tvshow.nfo"
 			Log('Looking for TV Show NFO file at ' + nfoName)
 
 		tvshowid = media.id
@@ -89,78 +101,81 @@ class xbmcnfo(Agent.TV_Shows):
 		results.Append(MetadataSearchResult(id=tvshowid, name=tvshowname, year=year, lang=lang, score=100))
 		Log('scraped results: ' + tvshowname + ' | year = ' + str(year) + ' | id = ' + tvshowid)
 
+##### update Function #####
 	def update(self, metadata, media, lang):
+		Log("++++++++++++++++++++++++")
+		Log("Entering update function")
+		Log("++++++++++++++++++++++++")
+
 		Dict.Reset()
 		id = media.id
 		duration_key = 'duration_'+id
 		Dict[duration_key] = [0] * 200
 		Log('Update called for TV Show with id = ' + id)
-		try: path1 = media.items[0].parts[0].file
+		try: path1 = os.path.dirname(media.items[0].parts[0].file)
 		except:
 			pageUrl = "http://localhost:32400/library/metadata/" + id + "/tree"
 			nfoXML = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
-			path1 = String.Unquote(nfoXML.get('file'))
+			path1 = os.path.dirname(String.Unquote(nfoXML.get('file')))
 		path = os.path.dirname(path1)
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		
 		nfoName = path + "/tvshow.nfo"
 		Log('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
-			path = os.path.dirname(path)
-			nfoName = path + "/tvshow.nfo"
-			Log('Looking for TV Show NFO file at ' + nfoName)
-		if not os.path.exists(nfoName):
-			path = os.path.dirname(path)
-			nfoName = path + "/tvshow.nfo"
+			nfoName = path1 + "/tvshow.nfo"
 			Log('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path1)
 
-		posterFilename = ""
-		if os.path.exists(path + "/../season-all-poster.jpg"):
-			posterFilename = path + "/../season-all-poster.jpg"
-		if os.path.exists(path + "/season-all-poster.jpg"):
-			posterFilename = path + "/season-all-poster.jpg"
-		if os.path.exists(path + "/../folder.jpg"):
-			posterFilename = path + "/../folder.jpg"
-		if os.path.exists(path + "/folder.jpg"):
-			posterFilename = path + "/folder.jpg"
-		if os.path.exists(path + "/../poster.jpg"):
-			posterFilename = path + "/../poster.jpg"
-		if os.path.exists(path + "/poster.jpg"):
-			posterFilename = path + "/poster.jpg"
+		posterNames = []
+		posterNames.append (path + "/poster.jpg")
+		posterNames.append (path + "/folder.jpg")
+		posterNames.append (path + "/show.jpg")
+		posterNames.append (path + "/season-all-poster.jpg")
+
+		# check possible poster file locations
+		posterFilename = self.checkFilePaths (posterNames, 'poster')
+
 		if posterFilename:
 			posterData = Core.storage.load(posterFilename)
 			metadata.posters['poster.jpg'] = Proxy.Media(posterData)
 			Log('Found poster image at ' + posterFilename)
 
-		bannerFilename = ""
-		if os.path.exists(path + "/../folder-banner.jpg"):
-			bannerFilename = path + "/../folder-banner.jpg"
-		if os.path.exists(path + "/folder-banner.jpg"):
-			bannerFilename = path + "/folder-banner.jpg"
-		if os.path.exists(path + "/../banner.jpg"):
-			bannerFilename = path + "/../banner.jpg"
-		if os.path.exists(path + "/banner.jpg"):
-			bannerFilename = path + "/banner.jpg"
+		bannerNames = []
+		bannerNames.append (path + "/banner.jpg")
+		bannerNames.append (path + "/folder-banner.jpg")
+
+		# check possible banner file locations
+		bannerFilename = self.checkFilePaths (bannerNames, 'banner')
+
 		if bannerFilename:
 			bannerData = Core.storage.load(bannerFilename)
 			metadata.banners['banner.jpg'] = Proxy.Media(bannerData)
 			Log('Found banner image at ' + bannerFilename)
 
-		fanartFilename = ""
-		if os.path.exists(path + "/../fanart.jpg"):
-			fanartFilename = path + "/../fanart.jpg"
-		if os.path.exists(path + "/fanart.jpg"):
-			fanartFilename = path + "/fanart.jpg"
+		fanartNames = []
+
+		fanartNames.append (path + "/fanart.jpg")
+		fanartNames.append (path + "/art.jpg")
+		fanartNames.append (path + "/backdrop.jpg")
+		fanartNames.append (path + "/background.jpg")
+
+		# check possible fanart file locations
+		fanartFilename = self.checkFilePaths (fanartNames, 'fanart')
+
 		if fanartFilename:
 			fanartData = Core.storage.load(fanartFilename)
 			metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
 			Log('Found fanart image at ' + fanartFilename)
 
-		themeFilename = ""
-		if os.path.exists(path + "/theme.mp3"):
-			themeFilename = path + "/theme.mp3"
+		themeNames = []
+
+		themeNames.append (path + "/theme.mp3")
+
+		# check possible theme file locations
+		themeFilename = self.checkFilePaths (themeNames, 'theme')
+
 		if themeFilename:
 			themeData = Core.storage.load(themeFilename)
 			metadata.themes['theme.mp3'] = Proxy.Media(themeData)
