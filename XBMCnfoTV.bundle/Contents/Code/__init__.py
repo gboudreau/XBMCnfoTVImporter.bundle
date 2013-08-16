@@ -206,17 +206,23 @@ class xbmcnfo(Agent.TV_Shows):
 				except:
 					Log("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
 					return
-				#tv show year and first Aired
-				try: metadata.originally_available_at=parse_date(nfoXML.xpath("premiered")[0].text) #metadata.originally_available_at=nfoXML.xpath("aired")[0].text
+				#tv show original name
+				try: metadata.original_title = nfoXML.xpath('./originaltitle')[0].text
 				except: pass
 				#tv show summary
 				try: metadata.summary=nfoXML.xpath("plot")[0].text
 				except: pass
-				#tv show content rating
-				try: metadata.content_rating=nfoXML.xpath("mpaa")[0].text
+				#tv show tagline
+				try: metadata.tagline = nfoXML.findall("tagline")[0].text
+				except: pass
+				#tv show year and first Aired
+				try: metadata.originally_available_at=parse_date(nfoXML.xpath("premiered")[0].text) #metadata.originally_available_at=nfoXML.xpath("aired")[0].text
 				except: pass
 				#tv show rating
-				try: metadata.rating=nfoXML.xpath("rating")[0].text
+				try: metadata.rating=float(nfoXML.xpath("rating")[0].text.replace(',','.'))
+				except: pass
+				#tv show content rating
+				try: metadata.content_rating=nfoXML.xpath("mpaa")[0].text
 				except: pass
 				#tv show network
 				try: metadata.studio=nfoXML.xpath("studio")[0].text
@@ -232,6 +238,22 @@ class xbmcnfo(Agent.TV_Shows):
 					metadata.duration = 0
 					Log("No Series Episode Duration in tvschow.nfo file.")
 					pass
+				#set/collections
+				try:
+					set_ = nfoXML.xpath('./set')[0].text
+					metadata.collections.clear()
+					metadata.collections.add(set_)
+				except: pass
+				#genre, cant see mulltiple only sees string not seperate genres
+				try:
+					genres = nfoXML.xpath('./genre')
+					metadata.genres.clear()
+					for genreXML in genres:
+						gs = genreXML.text.split("/")
+						if gs != "":
+							for g in gs:
+								metadata.genres.add(g.strip())
+				except: pass
 				Log('Title: ' + metadata.title)
 				if metadata.originally_available_at:
 					Log('Aired: ' + str(metadata.originally_available_at.year) + '-' + str(metadata.originally_available_at.month) + '-' + str(metadata.originally_available_at.day))
@@ -273,6 +295,11 @@ class xbmcnfo(Agent.TV_Shows):
 					episodes = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Video')
 					Log("Found " + str(len(episodes)) + " episodes.")
 					
+					firstEpisodePath = XML.ElementFromURL(pageUrl).xpath('//Part')[0].get('file')
+					seasonPath = os.path.dirname(firstEpisodePath)
+					seasonFilenameFolderJpg = seasonPath.replace(path+'\\','') + '/' + 'folder.jpg'
+					seasonPathFilenameFolderJpg = path + '/' + seasonFilenameFolderJpg
+					Log("Found poster '" + seasonFilenameFolderJpg + "' - path '" + seasonPathFilenameFolderJpg + "' -CR.")
 					if(int(season_num) == 0):
 						seasonFilenameEden = 'season-specials.tbn'
 					else:
@@ -288,9 +315,12 @@ class xbmcnfo(Agent.TV_Shows):
 					if os.path.exists(seasonPathFilenameEden):
 						seasonFilename = seasonFilenameEden
 						seasonPathFilename = seasonPathFilenameEden
-					if os.path.exists(seasonPathFilenameFrodo):
+					elif os.path.exists(seasonPathFilenameFrodo):
 						seasonFilename = seasonFilenameFrodo
 						seasonPathFilename = seasonPathFilenameFrodo
+					elif os.path.exists(seasonPathFilenameFolderJpg):
+						seasonFilename = seasonFilenameFolderJpg
+						seasonPathFilename = seasonPathFilenameFolderJpg
 					if seasonPathFilename:
 						seasonData = Core.storage.load(seasonPathFilename)
 						metadata.seasons[season_num].posters[seasonFilename] = Proxy.Media(seasonData)
@@ -344,14 +374,35 @@ class xbmcnfo(Agent.TV_Shows):
 										#year
 										try:
 											try:
-												air_date = time.strptime(nfoXML.xpath("releasedate")[0].text, "%d %B %Y")
+												air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%d %B %Y")
 											except:
-												air_date = time.strptime(nfoXML.xpath("releasedate")[0].text, "%Y-%m-%d")
+												air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%Y-%m-%d")
 											if air_date:
 												episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(air_date)).date()
 										except: pass
+										#rating
+										try: episode.rating = float(nfoXML.xpath('./rating')[0].text.replace(',','.'))
+										except: pass
 										#content rating
 										try: episode.content_rating = nfoXML.xpath('./mpaa')[0].text
+										except: pass
+										#director
+										try: 
+											directors = nfoXML.xpath('./director')
+											episode.directors.clear()
+											for directorXML in directors:
+												ds = directorXML.text.split("/")
+												if ds != "":
+													for d in ds:
+														episode.directors.add(d)
+										except: pass
+										#writers/credits
+										try: 
+											credits = nfoXML.xpath('./credits')
+											episode.writers.clear()
+											for creditXML in credits:
+												writer = creditXML.text
+												episode.writers.add(writer)
 										except: pass
 										#studio
 										try: episode.studio = nfoXML.findall("studio")[0].text
@@ -366,20 +417,33 @@ class xbmcnfo(Agent.TV_Shows):
 												eduration_min = int(round (float(eduration_ms) / 1000 / 60))
 												Dict[duration_key][eduration_min] = Dict[duration_key][eduration_min] + 1
 										except:
-											eduration_min = 0
+											eduration = eduration_min = eduration_ms = 0
 											Log ("No Episode Duration in episodes .nfo file.")
 											pass
-
-										thumbFilenameEden = nfoFile.replace('.nfo', '.tbn')
-										thumbFilenameFrodo = nfoFile.replace('.nfo', '-thumb.jpg')
+										
+										thumbPathFilenameDLNA = nfoFile.replace('.nfo', '.jpg')
+										thumbFilenameDLNA = thumbPathFilenameDLNA.replace(path+'\\', '')
+										Log("Found thumb '" + thumbFilenameDLNA + "' - path '" + thumbPathFilenameDLNA + "' -CR.")
+										thumbPathFilenameEden = nfoFile.replace('.nfo', '.tbn')
+										thumbFilenameEden = thumbPathFilenameEden.replace(path+'\\', '')
+										thumbPathFilenameFrodo = nfoFile.replace('.nfo', '-thumb.jpg')
+										thumbFilenameFrodo = thumbPathFilenameFrodo.replace(path+'\\', '')
+										thumbPathFilename = ""
 										thumbFilename = ""
-										if os.path.exists(thumbFilenameEden):
+										
+										if os.path.exists(thumbPathFilenameEden):
 											thumbFilename = thumbFilenameEden
-										if os.path.exists(thumbFilenameFrodo):
+											thumbPathFilename = thumbPathFilenameEden
+										elif os.path.exists(thumbPathFilenameFrodo):
 											thumbFilename = thumbFilenameFrodo
-										if thumbFilename:
-											Log("Found episode thumb " + thumbFilename)
-											episode.thumbs[thumbFilename] = Proxy.Media(Core.storage.load(thumbFilename))
+											thumbPathFilename = thumbPathFilenameFrodo
+										elif os.path.exists(thumbPathFilenameDLNA):
+											thumbFilename = thumbFilenameDLNA
+											thumbPathFilename = thumbPathFilenameDLNA
+										if thumbPathFilename:
+											thumbData = Core.storage.load(thumbPathFilename)
+											episode.thumbs[thumbFilename] = Proxy.Media(thumbData)
+											Log("Found episode thumb " + thumbPathFilename)
 										else:
 											m = nfoXML.findall("episodedetails/thumb")
 											if len(m) > 0:
@@ -391,7 +455,7 @@ class xbmcnfo(Agent.TV_Shows):
 												ep_summary = episode.summary.replace("\n", " ")
 										except:
 												ep_summary = episode.summary
-										indent = '{:>61}'.format('')
+										indent = '{:>61}'#.format('')
 										logtext = ("" +
 										"+++++++++++++++++++++++++++++++++\n" + indent +
 										"TV Episode S" + season_num.zfill(2) + "E" + ep_num.zfill(2) + " nfo Information\n" + indent +
