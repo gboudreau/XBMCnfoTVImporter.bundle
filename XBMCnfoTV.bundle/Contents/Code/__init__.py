@@ -143,7 +143,7 @@ class xbmcnfo(Agent.TV_Shows):
 			Log('Found poster image at ' + posterFilename)
 
 		bannerNames = []
-		bannerNames.append (path + "/banner.jpg")
+		# bannerNames.append (path + "/banner.jpg")
 		bannerNames.append (path + "/folder-banner.jpg")
 
 		# check possible banner file locations
@@ -154,20 +154,20 @@ class xbmcnfo(Agent.TV_Shows):
 			metadata.banners['banner.jpg'] = Proxy.Media(bannerData)
 			Log('Found banner image at ' + bannerFilename)
 
-		fanartNames = []
+		# fanartNames = []
 
-		fanartNames.append (path + "/fanart.jpg")
-		fanartNames.append (path + "/art.jpg")
-		fanartNames.append (path + "/backdrop.jpg")
-		fanartNames.append (path + "/background.jpg")
+		# fanartNames.append (path + "/fanart.jpg")
+		# fanartNames.append (path + "/art.jpg")
+		# fanartNames.append (path + "/backdrop.jpg")
+		# fanartNames.append (path + "/background.jpg")
 
-		# check possible fanart file locations
-		fanartFilename = self.checkFilePaths (fanartNames, 'fanart')
+		# # check possible fanart file locations
+		# fanartFilename = self.checkFilePaths (fanartNames, 'fanart')
 
-		if fanartFilename:
-			fanartData = Core.storage.load(fanartFilename)
-			metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
-			Log('Found fanart image at ' + fanartFilename)
+		# if fanartFilename:
+			# fanartData = Core.storage.load(fanartFilename)
+			# metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
+			# Log('Found fanart image at ' + fanartFilename)
 
 		themeNames = []
 
@@ -223,12 +223,9 @@ class xbmcnfo(Agent.TV_Shows):
 				except: pass
 				#tv show content rating
 				try:
-					content_rating = nfoXML.xpath('./mpaa')[0].text
-					valid_mpaa_ratings = ('G', 'PG', 'PG-13', 'R', 'NC-17', 'TV-Y', 'TV-Y7', 'TV-G', 'TV-PG', 'TV-14', 'TV-MA')
-					for mpaa_rating in valid_mpaa_ratings:
-						if re.findall((r'(^|\s)%s(\s|$)' % mpaa_rating), content_rating):
-							metadata.content_rating = mpaa_rating
-							break
+					match = re.match(r'(?:Rated\s+)?(?P<mpaa>[A-z0-9-]+)?', nfoXML.xpath('./mpaa')[0].text)
+					if match.group('mpaa'):
+						metadata.content_rating = match.group('mpaa')
 					else:
 						metadata.content_rating = 'NR'
 				except: pass
@@ -305,18 +302,18 @@ class xbmcnfo(Agent.TV_Shows):
 					
 					firstEpisodePath = XML.ElementFromURL(pageUrl).xpath('//Part')[0].get('file')
 					seasonPath = os.path.dirname(firstEpisodePath)
-					seasonFilenameFolderJpg = seasonPath.replace(path+'\\','') + '/' + 'folder.jpg'
-					seasonPathFilenameFolderJpg = path + '/' + seasonFilenameFolderJpg
+					seasonFilenameFolderJpg = 'folder.jpg'
+					seasonPathFilenameFolderJpg = seasonPath + '/' + seasonFilenameFolderJpg
 					Log("Found poster '" + seasonFilenameFolderJpg + "' - path '" + seasonPathFilenameFolderJpg + "' -CR.")
 					if(int(season_num) == 0):
 						seasonFilenameEden = 'season-specials.tbn'
 					else:
-						seasonFilenameEden = 'season%(number)02d.tbn' % {"number": int(season_num)}
+						seasonFilenameEden = '/'#'season%(number)02d.tbn' % {"number": int(season_num)}
 					seasonPathFilenameEden = path + '/' + seasonFilenameEden
 					if(int(season_num) == 0):
 						seasonFilenameFrodo = 'season-specials-poster.jpg'
 					else:
-						seasonFilenameFrodo = 'season%(number)02d-poster.jpg' % {"number": int(season_num)}
+						seasonFilenameFrodo = '/'#'season%(number)02d-poster.jpg' % {"number": int(season_num)}
 					seasonPathFilenameFrodo = path + '/' + seasonFilenameFrodo
 					seasonFilename = ""
 					seasonPathFilename = ""
@@ -429,30 +426,30 @@ class xbmcnfo(Agent.TV_Shows):
 											Log ("No Episode Duration in episodes .nfo file.")
 											pass
 										
-										thumbPathFilenameDLNA = nfoFile.replace('.nfo', '.jpg')
-										thumbFilenameDLNA = thumbPathFilenameDLNA.replace(path+'\\', '')
-										Log("Found thumb '" + thumbFilenameDLNA + "' - path '" + thumbPathFilenameDLNA + "' -CR.")
-										thumbPathFilenameEden = nfoFile.replace('.nfo', '.tbn')
-										thumbFilenameEden = thumbPathFilenameEden.replace(path+'\\', '')
-										thumbPathFilenameFrodo = nfoFile.replace('.nfo', '-thumb.jpg')
-										thumbFilenameFrodo = thumbPathFilenameFrodo.replace(path+'\\', '')
-										thumbPathFilename = ""
-										thumbFilename = ""
+										# thumbPathFilenameDLNA = nfoFile.replace('.nfo', '.jpg')
+										# thumbFilenameDLNA = thumbPathFilenameDLNA.replace(path+'\\', '')
+										# Log("Found thumb '" + thumbFilenameDLNA + "' - path '" + thumbPathFilenameDLNA + "' -CR.")
+										# thumbPathFilenameEden = nfoFile.replace('.nfo', '.tbn')
+										# thumbFilenameEden = thumbPathFilenameEden.replace(path+'\\', '')
+										# thumbPathFilenameFrodo = nfoFile.replace('.nfo', '-thumb.jpg')
+										# thumbFilenameFrodo = thumbPathFilenameFrodo.replace(path+'\\', '')
+										# thumbPathFilename = ""
+										# thumbFilename = ""
 										
-										if os.path.exists(thumbPathFilenameEden):
-											thumbFilename = thumbFilenameEden
-											thumbPathFilename = thumbPathFilenameEden
-										elif os.path.exists(thumbPathFilenameFrodo):
-											thumbFilename = thumbFilenameFrodo
-											thumbPathFilename = thumbPathFilenameFrodo
-										elif os.path.exists(thumbPathFilenameDLNA):
-											thumbFilename = thumbFilenameDLNA
-											thumbPathFilename = thumbPathFilenameDLNA
-										if thumbPathFilename:
-											thumbData = Core.storage.load(thumbPathFilename)
-											episode.thumbs[thumbFilename] = Proxy.Media(thumbData)
-											Log("Found episode thumb " + thumbPathFilename)
-										else:
+										# if os.path.exists(thumbPathFilenameEden):
+											# thumbFilename = thumbFilenameEden
+											# thumbPathFilename = thumbPathFilenameEden
+										# elif os.path.exists(thumbPathFilenameFrodo):
+											# thumbFilename = thumbFilenameFrodo
+											# thumbPathFilename = thumbPathFilenameFrodo
+										# elif os.path.exists(thumbPathFilenameDLNA):
+											# thumbFilename = thumbFilenameDLNA
+											# thumbPathFilename = thumbPathFilenameDLNA
+										# if thumbPathFilename:
+											# thumbData = Core.storage.load(thumbPathFilename)
+											# episode.thumbs[thumbFilename] = Proxy.Media(thumbData)
+											# Log("Found episode thumb " + thumbPathFilename)
+										# else:
 											m = nfoXML.findall("episodedetails/thumb")
 											if len(m) > 0:
 												thumbURL = m[0].text
