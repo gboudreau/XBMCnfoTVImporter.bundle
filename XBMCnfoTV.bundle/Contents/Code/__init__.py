@@ -222,7 +222,15 @@ class xbmcnfo(Agent.TV_Shows):
 				try: metadata.rating=float(nfoXML.xpath("rating")[0].text.replace(',','.'))
 				except: pass
 				#tv show content rating
-				try: metadata.content_rating=nfoXML.xpath("mpaa")[0].text
+				try:
+					content_rating = nfoXML.xpath('./mpaa')[0].text
+					valid_mpaa_ratings = ('G', 'PG', 'PG-13', 'R', 'NC-17', 'TV-Y', 'TV-Y7', 'TV-G', 'TV-PG', 'TV-14', 'TV-MA')
+					for mpaa_rating in valid_mpaa_ratings:
+						if re.findall((r'(^|\s)%s(\s|$)' % mpaa_rating), content_rating):
+							metadata.content_rating = mpaa_rating
+							break
+					else:
+						metadata.content_rating = 'NR'
 				except: pass
 				#tv show network
 				try: metadata.studio=nfoXML.xpath("studio")[0].text
