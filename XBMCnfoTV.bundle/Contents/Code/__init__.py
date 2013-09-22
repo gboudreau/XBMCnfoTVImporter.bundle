@@ -487,7 +487,7 @@ class xbmcnfo(Agent.TV_Shows):
 											# episode.thumbs[thumbFilename] = Proxy.Media(thumbData)
 											# Log("Found episode thumb " + thumbPathFilename)
 										# else:
-											m = nfoXML.findall("episodedetails/thumb")
+											m = nfoXML.xpath("thumb")
 											if len(m) > 0:
 												thumbURL = m[0].text
 												Log("Found episode thumb " + thumbURL)
