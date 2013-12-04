@@ -145,7 +145,7 @@ class xbmcnfo(Agent.TV_Shows):
 			Log('Found poster image at ' + posterFilename)
 
 		bannerNames = []
-		# bannerNames.append (path + "/banner.jpg")
+		bannerNames.append (path + "/banner.jpg")
 		bannerNames.append (path + "/folder-banner.jpg")
 
 		# check possible banner file locations
@@ -156,20 +156,20 @@ class xbmcnfo(Agent.TV_Shows):
 			metadata.banners['banner.jpg'] = Proxy.Media(bannerData)
 			Log('Found banner image at ' + bannerFilename)
 
-		# fanartNames = []
+		fanartNames = []
 
-		# fanartNames.append (path + "/fanart.jpg")
-		# fanartNames.append (path + "/art.jpg")
-		# fanartNames.append (path + "/backdrop.jpg")
-		# fanartNames.append (path + "/background.jpg")
+		fanartNames.append (path + "/fanart.jpg")
+		fanartNames.append (path + "/art.jpg")
+		fanartNames.append (path + "/backdrop.jpg")
+		fanartNames.append (path + "/background.jpg")
 
-		# # check possible fanart file locations
-		# fanartFilename = self.checkFilePaths (fanartNames, 'fanart')
+		# check possible fanart file locations
+		fanartFilename = self.checkFilePaths (fanartNames, 'fanart')
 
-		# if fanartFilename:
-			# fanartData = Core.storage.load(fanartFilename)
-			# metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
-			# Log('Found fanart image at ' + fanartFilename)
+		if fanartFilename:
+			fanartData = Core.storage.load(fanartFilename)
+			metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
+			Log('Found fanart image at ' + fanartFilename)
 
 		themeNames = []
 
@@ -463,30 +463,30 @@ class xbmcnfo(Agent.TV_Shows):
 											episode.duration = metadata.duration if metadata.duration else None
 											Log ("No Episode Duration in episodes .nfo file.")
 										
-										# thumbPathFilenameDLNA = nfoFile.replace('.nfo', '.jpg')
-										# thumbFilenameDLNA = thumbPathFilenameDLNA.replace(path+'\\', '')
-										# Log("Found thumb '" + thumbFilenameDLNA + "' - path '" + thumbPathFilenameDLNA + "' -CR.")
-										# thumbPathFilenameEden = nfoFile.replace('.nfo', '.tbn')
-										# thumbFilenameEden = thumbPathFilenameEden.replace(path+'\\', '')
-										# thumbPathFilenameFrodo = nfoFile.replace('.nfo', '-thumb.jpg')
-										# thumbFilenameFrodo = thumbPathFilenameFrodo.replace(path+'\\', '')
-										# thumbPathFilename = ""
-										# thumbFilename = ""
+										thumbPathFilenameDLNA = nfoFile.replace('.nfo', '.jpg')
+										thumbFilenameDLNA = thumbPathFilenameDLNA.replace(path+'\\', '')
+										Log("Found thumb '" + thumbFilenameDLNA + "' - path '" + thumbPathFilenameDLNA + "' -CR.")
+										thumbPathFilenameEden = nfoFile.replace('.nfo', '.tbn')
+										thumbFilenameEden = thumbPathFilenameEden.replace(path+'\\', '')
+										thumbPathFilenameFrodo = nfoFile.replace('.nfo', '-thumb.jpg')
+										thumbFilenameFrodo = thumbPathFilenameFrodo.replace(path+'\\', '')
+										thumbPathFilename = ""
+										thumbFilename = ""
 										
-										# if os.path.exists(thumbPathFilenameEden):
-											# thumbFilename = thumbFilenameEden
-											# thumbPathFilename = thumbPathFilenameEden
-										# elif os.path.exists(thumbPathFilenameFrodo):
-											# thumbFilename = thumbFilenameFrodo
-											# thumbPathFilename = thumbPathFilenameFrodo
-										# elif os.path.exists(thumbPathFilenameDLNA):
-											# thumbFilename = thumbFilenameDLNA
-											# thumbPathFilename = thumbPathFilenameDLNA
-										# if thumbPathFilename:
-											# thumbData = Core.storage.load(thumbPathFilename)
-											# episode.thumbs[thumbFilename] = Proxy.Media(thumbData)
-											# Log("Found episode thumb " + thumbPathFilename)
-										# else:
+										if os.path.exists(thumbPathFilenameEden):
+											thumbFilename = thumbFilenameEden
+											thumbPathFilename = thumbPathFilenameEden
+										elif os.path.exists(thumbPathFilenameFrodo):
+											thumbFilename = thumbFilenameFrodo
+											thumbPathFilename = thumbPathFilenameFrodo
+										elif os.path.exists(thumbPathFilenameDLNA):
+											thumbFilename = thumbFilenameDLNA
+											thumbPathFilename = thumbPathFilenameDLNA
+										if thumbPathFilename:
+											thumbData = Core.storage.load(thumbPathFilename)
+											episode.thumbs[thumbFilename] = Proxy.Media(thumbData)
+											Log("Found episode thumb " + thumbPathFilename)
+										else:
 											m = nfoXML.xpath("thumb")
 											if len(m) > 0:
 												thumbURL = m[0].text
