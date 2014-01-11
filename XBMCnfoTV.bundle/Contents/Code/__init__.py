@@ -6,15 +6,20 @@
 # Eden and Frodo compatibility added by Jorge Amigo
 # Cleanup and some extensions by SlrG
 #
-import os, re, time, datetime
+import os, re, time, datetime, platform, traceback
 
 class xbmcnfo(Agent.TV_Shows):
 	name = 'XBMC TV .nfo Importer'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia']
+	pc = '/';
 
 ##### helper functions #####
+	def DLog (self, LogMessage):
+		if Prefs['debug']:
+			Log (LogMessage)
+
 	def time_convert (self, duration):
 		if (duration <= 2):
 			duration = duration * 60 * 60 * 1000 #h to ms
@@ -26,7 +31,7 @@ class xbmcnfo(Agent.TV_Shows):
 
 	def checkFilePaths(self, pathfns, ftype):
 		for pathfn in pathfns:
-			Log("Trying " + pathfn)
+			self.DLog("Trying " + pathfn)
 			if not os.path.exists(pathfn):
 				continue
 			else:
@@ -37,27 +42,29 @@ class xbmcnfo(Agent.TV_Shows):
 
 ##### search function #####
 	def search(self, results, media, lang):
-		Log("++++++++++++++++++++++++")
-		Log("Entering search function")
-		Log("++++++++++++++++++++++++")
+		self.DLog("++++++++++++++++++++++++")
+		self.DLog("Entering search function")
+		self.DLog("++++++++++++++++++++++++")
+
+		self.pc = '\\' if platform.system() == 'Windows' else '/'
 
 		parse_date = lambda s: Datetime.ParseDate(s).date()
-		Log(media.primary_metadata)
+		self.DLog(media.primary_metadata)
 		path1 = os.path.dirname(String.Unquote(media.filename).encode('utf-8'))
-		Log(path1)
+		self.DLog(path1)
 		path = os.path.dirname(path1)
-		nfoName = path + "/tvshow.nfo"
-		Log('Looking for TV Show NFO file at ' + nfoName)
+		nfoName = path + self.pc + "tvshow.nfo"
+		self.DLog('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
-			nfoName = path1 + "/tvshow.nfo"
-			Log('Looking for TV Show NFO file at ' + nfoName)
+			nfoName = path1 + self.pc + "tvshow.nfo"
+			self.DLog('Looking for TV Show NFO file at ' + nfoName)
 
 		id = media.id
 		year = 0
 		title = None
 
 		if not os.path.exists(nfoName):
-			Log("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
+			self.DLog("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
 			path = os.path.dirname(path1)
 			title = os.path.basename(path)
 			Log("Using tvshow.title = " + title)
@@ -66,7 +73,7 @@ class xbmcnfo(Agent.TV_Shows):
 			Log("Found nfo file at " + nfoFile)
 			nfoText = Core.storage.load(nfoFile)
 			# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
-			nfoText = re.sub(r'&([^a-zA-Z#])', r'&amp;\1', nfoText)
+			nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
 			nfoTextLower = nfoText.lower()
 			if nfoTextLower.count('<tvshow') > 0 and nfoTextLower.count('</tvshow>') > 0:
 				# Remove URLs (or other stuff) at the end of the XML file
@@ -75,14 +82,14 @@ class xbmcnfo(Agent.TV_Shows):
 				#likely an xbmc nfo file
 				try: nfoXML = XML.ElementFromString(nfoText).xpath('//tvshow')[0]
 				except:
-					Log('ERROR: Cant parse XML in ' + nfoFile + '. Aborting!')
+					self.DLog('ERROR: Cant parse XML in ' + nfoFile + '. Aborting!')
 					return
 				Log(nfoXML.xpath("title"))
 				
 				# Title
 				try: title = nfoXML.xpath("title")[0].text
 				except:
-					Log("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
+					self.DLog("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
 					return
 				# Year
 				try: year = parse_date(nfoXML.xpath("premiered")[0].text).year
@@ -105,9 +112,11 @@ class xbmcnfo(Agent.TV_Shows):
 
 ##### update Function #####
 	def update(self, metadata, media, lang):
-		Log("++++++++++++++++++++++++")
-		Log("Entering update function")
-		Log("++++++++++++++++++++++++")
+		self.DLog("++++++++++++++++++++++++")
+		self.DLog("Entering update function")
+		self.DLog("++++++++++++++++++++++++")
+
+		self.pc = '\\' if platform.system() == 'Windows' else '/'
 
 		Dict.Reset()
 		id = media.id
@@ -122,19 +131,19 @@ class xbmcnfo(Agent.TV_Shows):
 		path = os.path.dirname(path1)
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		
-		nfoName = path + "/tvshow.nfo"
-		Log('Looking for TV Show NFO file at ' + nfoName)
+		nfoName = path + self.pc + "tvshow.nfo"
+		self.DLog('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
-			nfoName = path1 + "/tvshow.nfo"
-			Log('Looking for TV Show NFO file at ' + nfoName)
+			nfoName = path1 + self.pc + "tvshow.nfo"
+			self.DLog('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path1)
 
 		posterNames = []
-		posterNames.append (path + "/poster.jpg")
-		posterNames.append (path + "/folder.jpg")
-		posterNames.append (path + "/show.jpg")
-		posterNames.append (path + "/season-all-poster.jpg")
+		posterNames.append (path + self.pc + "poster.jpg")
+		posterNames.append (path + self.pc + "folder.jpg")
+		posterNames.append (path + self.pc + "show.jpg")
+		posterNames.append (path + self.pc + "season-all-poster.jpg")
 
 		# check possible poster file locations
 		posterFilename = self.checkFilePaths (posterNames, 'poster')
@@ -145,8 +154,8 @@ class xbmcnfo(Agent.TV_Shows):
 			Log('Found poster image at ' + posterFilename)
 
 		bannerNames = []
-		bannerNames.append (path + "/banner.jpg")
-		bannerNames.append (path + "/folder-banner.jpg")
+		bannerNames.append (path + self.pc + "banner.jpg")
+		bannerNames.append (path + self.pc + "folder-banner.jpg")
 
 		# check possible banner file locations
 		bannerFilename = self.checkFilePaths (bannerNames, 'banner')
@@ -158,10 +167,10 @@ class xbmcnfo(Agent.TV_Shows):
 
 		fanartNames = []
 
-		fanartNames.append (path + "/fanart.jpg")
-		fanartNames.append (path + "/art.jpg")
-		fanartNames.append (path + "/backdrop.jpg")
-		fanartNames.append (path + "/background.jpg")
+		fanartNames.append (path + self.pc + "fanart.jpg")
+		fanartNames.append (path + self.pc + "art.jpg")
+		fanartNames.append (path + self.pc + "backdrop.jpg")
+		fanartNames.append (path + self.pc + "background.jpg")
 
 		# check possible fanart file locations
 		fanartFilename = self.checkFilePaths (fanartNames, 'fanart')
@@ -173,7 +182,7 @@ class xbmcnfo(Agent.TV_Shows):
 
 		themeNames = []
 
-		themeNames.append (path + "/theme.mp3")
+		themeNames.append (path + self.pc + "theme.mp3")
 
 		# check possible theme file locations
 		themeFilename = self.checkFilePaths (themeNames, 'theme')
@@ -184,15 +193,15 @@ class xbmcnfo(Agent.TV_Shows):
 			Log('Found theme music ' + themeFilename)
 
 		if not os.path.exists(nfoName):
-			Log("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
+			self.DLog("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
 			path = os.path.dirname(path1)
 			metadata.title = os.path.basename(path)
-			Log("Using tvshow.title = " + metadata.title)
+			self.DLog("Using tvshow.title = " + metadata.title)
 		else:
 			nfoFile = nfoName
 			nfoText = Core.storage.load(nfoFile)
 			# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
-			nfoText = re.sub(r'&([^a-zA-Z#])', r'&amp;\1', nfoText)
+			nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
 			nfoTextLower = nfoText.lower()
 			if nfoTextLower.count('<tvshow') > 0 and nfoTextLower.count('</tvshow>') > 0:
 				# Remove URLs (or other stuff) at the end of the XML file
@@ -201,13 +210,13 @@ class xbmcnfo(Agent.TV_Shows):
 				#likely an xbmc nfo file
 				try: nfoXML = XML.ElementFromString(nfoText).xpath('//tvshow')[0]
 				except:
-					Log('ERROR: Cant parse XML in ' + nfoFile + '. Aborting!')
+					self.DLog('ERROR: Cant parse XML in ' + nfoFile + '. Aborting!')
 					return
 				
 				# Title
 				try: metadata.title = nfoXML.xpath("title")[0].text
 				except:
-					Log("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
+					self.DLog("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
 					return
 				# Original Title
 				try: metadata.original_title = nfoXML.xpath('originaltitle')[0].text
@@ -229,7 +238,9 @@ class xbmcnfo(Agent.TV_Shows):
 				try: metadata.studio = nfoXML.xpath("studio")[0].text
 				except: pass
 				# Premiere
-				try: metadata.originally_available_at = parse_date(nfoXML.xpath("premiered")[0].text)
+				try:
+					try: metadata.originally_available_at = parse_date(nfoXML.xpath("premiered")[0].text)
+					except: metadata.originally_available_at = parse_date(nfoXML.xpath("dateadded")[0].text)
 				except: pass
 				# Tagline
 				try: metadata.tagline = nfoXML.findall("tagline")[0].text
@@ -257,9 +268,9 @@ class xbmcnfo(Agent.TV_Shows):
 					duration = int(re.compile('^([0-9]+)').findall(sruntime)[0])
 					duration_ms = xbmcnfo.time_convert (self, duration)
 					metadata.duration = duration_ms
-					Log("Set Series Episode Duration from " + str(duration) + " in tvshow.nfo file to " + str(duration_ms) + " in Plex.")
+					self.DLog("Set Series Episode Duration from " + str(duration) + " in tvshow.nfo file to " + str(duration_ms) + " in Plex.")
 				except:
-					Log("No Series Episode Duration in tvschow.nfo file.")
+					self.DLog("No Series Episode Duration in tvschow.nfo file.")
 				# Actors
 				metadata.roles.clear()
 				for actor in nfoXML.xpath('actor'):
@@ -274,10 +285,7 @@ class xbmcnfo(Agent.TV_Shows):
 						# data = HTTP.Request(actor.xpath("thumb")[0].text)
 						# Log('Added Thumbnail for: ' + role.actor)
 				
-				# Log('Title: ' + metadata.title)
-				# if metadata.originally_available_at:
-					# Log('Aired: ' + str(metadata.originally_available_at.year) + '-' + str(metadata.originally_available_at.month) + '-' + str(metadata.originally_available_at.day))
-					
+				
 				Log("---------------------")
 				Log("Series nfo Information")
 				Log("---------------------")
@@ -316,7 +324,7 @@ class xbmcnfo(Agent.TV_Shows):
 		# Grabs the season data
 		@parallelize
 		def UpdateEpisodes():
-			Log("UpdateEpisodes called")
+			self.DLog("UpdateEpisodes called")
 			pageUrl = "http://localhost:32400/library/metadata/" + media.id + "/children"
 			seasonList = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Directory')
 
@@ -327,30 +335,30 @@ class xbmcnfo(Agent.TV_Shows):
 				try: season_num = seasons.get('index')
 				except: pass
 				
-				Log("seasonID : " + path)
+				self.DLog("seasonID : " + path)
 				if seasonID.count('allLeaves') == 0:
-					Log("Finding episodes")
+					self.DLog("Finding episodes")
 
 					pageUrl = "http://localhost:32400" + seasonID
 
 					episodes = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Video')
-					Log("Found " + str(len(episodes)) + " episodes.")
+					self.DLog("Found " + str(len(episodes)) + " episodes.")
 					
 					firstEpisodePath = XML.ElementFromURL(pageUrl).xpath('//Part')[0].get('file')
 					seasonPath = os.path.dirname(firstEpisodePath)
 					seasonFilenameFolderJpg = 'folder.jpg'
-					seasonPathFilenameFolderJpg = seasonPath + '/' + seasonFilenameFolderJpg
+					seasonPathFilenameFolderJpg = seasonPath + self.pc + seasonFilenameFolderJpg
 					Log("Found poster '" + seasonFilenameFolderJpg + "' - path '" + seasonPathFilenameFolderJpg + "' -CR.")
 					if(int(season_num) == 0):
 						seasonFilenameEden = 'season-specials.tbn'
 					else:
-						seasonFilenameEden = '/'#'season%(number)02d.tbn' % {"number": int(season_num)}
-					seasonPathFilenameEden = path + '/' + seasonFilenameEden
+						seasonFilenameEden = 'season%(number)02d.tbn' % {"number": int(season_num)}
+					seasonPathFilenameEden = path + self.pc + seasonFilenameEden
 					if(int(season_num) == 0):
 						seasonFilenameFrodo = 'season-specials-poster.jpg'
 					else:
-						seasonFilenameFrodo = '/'#'season%(number)02d-poster.jpg' % {"number": int(season_num)}
-					seasonPathFilenameFrodo = path + '/' + seasonFilenameFrodo
+						seasonFilenameFrodo = 'season%(number)02d-poster.jpg' % {"number": int(season_num)}
+					seasonPathFilenameFrodo = path + self.pc + seasonFilenameFrodo
 					seasonFilename = ""
 					seasonPathFilename = ""
 					if os.path.exists(seasonPathFilenameEden):
@@ -370,46 +378,46 @@ class xbmcnfo(Agent.TV_Shows):
 					for episodeXML in episodes:
 						ep_num = episodeXML.get('index')
 						ep_key = episodeXML.get('key')
-						Log("Found episode with key: " + ep_key)
+						self.DLog("Found episode with key: " + ep_key)
 	
 						# Get the episode object from the model
-						episode = metadata.seasons[season_num].episodes[ep_num]				
+						episode = metadata.seasons[season_num].episodes[ep_num]
 
 						# Grabs the episode information
 						@task
 						def UpdateEpisode(episode=episode, season_num=season_num, ep_num=ep_num, ep_key=ep_key, path=path1):
-							Log("UpdateEpisode called for episode S" + str(season_num.zfill(2)) + "E" + str(ep_num.zfill(2)))
+							self.DLog("UpdateEpisode called for episode S" + str(season_num.zfill(2)) + "E" + str(ep_num.zfill(2)))
 							if(ep_num.count('allLeaves') == 0):
 								pageUrl = "http://localhost:32400" + ep_key + "/tree"
 								path1 = XML.ElementFromURL(pageUrl).xpath('//MediaPart')[0].get('file')
-								Log('UPDATE: ' + path1)
+								self.DLog('UPDATE: ' + path1)
 								filepath = path1.split
 								path = os.path.dirname(path1)
 								fileExtension = path1.split(".")[-1].lower()
 
 								nfoFile = path1.replace('.'+fileExtension, '.nfo')
-								Log("Looking for episode NFO file " + nfoFile)
+								self.DLog("Looking for episode NFO file " + nfoFile)
 								if os.path.exists(nfoFile):
-									Log("File exists...")
+									self.DLog("File exists...")
 									nfoText = Core.storage.load(nfoFile)
 									# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
-									nfoText = re.sub(r'&([^a-zA-Z#])', r'&amp;\1', nfoText)
+									nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
 									nfoTextLower = nfoText.lower()
 									if nfoTextLower.count('<episodedetails') > 0 and nfoTextLower.count('</episodedetails>') > 0:
 										# Remove URLs (or other stuff) at the end of the XML file
 										nfoText = '%s</episodedetails>' % nfoText.split('</episodedetails>')[0]
 
-										Log("Looks like an XBMC NFO file (has <episodedetails>)")
+										self.DLog("Looks like an XBMC NFO file (has <episodedetails>)")
 										#likely an xbmc nfo file
 										try: nfoXML = XML.ElementFromString(nfoText).xpath('//episodedetails')[0]
 										except:
-											Log('ERROR: Cant parse XML in file: ' + nfoFile)
+											self.DLog('ERROR: Cant parse XML in file: ' + nfoFile)
 											return
 
 										# Ep. Title
 										try: episode.title = nfoXML.xpath('title')[0].text
 										except:
-											Log("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
+											self.DLog("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
 											return
 										# Ep. Content Rating
 										try:
@@ -427,12 +435,36 @@ class xbmcnfo(Agent.TV_Shows):
 										# Ep. Premiere
 										try:
 											try:
-												air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%d %B %Y")
+												self.DLog("Reading aired tag...")
+												air_string = nfoXML.xpath("aired")[0].text
 											except:
-												air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%Y-%m-%d")
-											if air_date:
-												episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(air_date)).date()
-										except: pass
+												self.DLog("No aired tag found...")
+												pass
+											if air_string:
+												air_date = None
+												try:
+													self.DLog("Airdate parsing with dBY...")
+													air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%d %B %Y")
+												except: pass
+												try:
+													if not air_date:
+														self.DLog("Airdate parsing with Ymd...")
+														air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%Y-%m-%d")
+												except: pass
+												try:
+													if not air_date:
+														self.DLog("Airdate parsing with dmY...")
+														air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%d.%m.%Y")
+												except: pass
+												try:
+													if not air_date:
+														self.DLog("Fallback to dateadded instead...")
+														air_date = time.strptime(nfoXML.xpath("dateadded")[0].text, "%Y-%m-%d")
+												except: pass
+												if air_date:
+													metadata.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(air_date)).date()
+										except Exception:
+											self.DLog("Exception: " + traceback.format_exc())
 										# Ep. Summary
 										try: episode.summary = nfoXML.xpath('plot')[0].text
 										except: pass
@@ -461,15 +493,15 @@ class xbmcnfo(Agent.TV_Shows):
 												Dict[duration_key][eduration_min] = Dict[duration_key][eduration_min] + 1
 										except:
 											episode.duration = metadata.duration if metadata.duration else None
-											Log ("No Episode Duration in episodes .nfo file.")
+											self.DLog ("No Episode Duration in episodes .nfo file.")
 										
 										thumbPathFilenameDLNA = nfoFile.replace('.nfo', '.jpg')
-										thumbFilenameDLNA = thumbPathFilenameDLNA.replace(path+'\\', '')
+										thumbFilenameDLNA = thumbPathFilenameDLNA.replace(path+self.pc, '')
 										Log("Found thumb '" + thumbFilenameDLNA + "' - path '" + thumbPathFilenameDLNA + "' -CR.")
 										thumbPathFilenameEden = nfoFile.replace('.nfo', '.tbn')
-										thumbFilenameEden = thumbPathFilenameEden.replace(path+'\\', '')
+										thumbFilenameEden = thumbPathFilenameEden.replace(path+self.pc, '')
 										thumbPathFilenameFrodo = nfoFile.replace('.nfo', '-thumb.jpg')
-										thumbFilenameFrodo = thumbPathFilenameFrodo.replace(path+'\\', '')
+										thumbFilenameFrodo = thumbPathFilenameFrodo.replace(path+self.pc, '')
 										thumbPathFilename = ""
 										thumbFilename = ""
 										
@@ -498,21 +530,6 @@ class xbmcnfo(Agent.TV_Shows):
 												# ep_summary = episode.summary.replace("\n", " ")
 										# except:
 												# ep_summary = episode.summary
-												
-										# indent = '{:>61}'#.format('')
-										# logtext = ("" +
-										# "+++++++++++++++++++++++++++++++++\n" + indent +
-										# "TV Episode S" + season_num.zfill(2) + "E" + ep_num.zfill(2) + " nfo Information\n" + indent +
-										# "---------------------------------\n" + indent +
-										# "Title: " + str(episode.title) + "\n" + indent +
-										# "Summary: " + str(ep_summary) + "\n" + indent +
-										# "Year: " + str(episode.originally_available_at) + "\n" + indent +
-										# "IMDB rating: " + str(episode.rating) + "\n" + indent +
-										# "Episode .nfo: " + str(eduration) + "\n" + indent +
-										# "Episode ms: " + str(eduration_ms) + "\n" + indent +
-										# "Episode min: " + str(eduration_min) + "\n" + indent +
-										# "+++++++++++++++++++++++++++++++++")
-										# Log(logtext)
 										
 										Log("---------------------")
 										Log("Episode (S"+season_num.zfill(2)+"E"+ep_num.zfill(2)+") nfo Information")
@@ -544,10 +561,10 @@ class xbmcnfo(Agent.TV_Shows):
 			try:
 				duration_min = Dict[duration_key].index(max(Dict[duration_key]))
 				metadata.duration = duration_min * 60 * 1000
-				Log("Set Series Episode Runtime to median of all episodes: " + str(metadata.duration) + " (" + str (duration_min) + " minutes)")
+				self.DLog("Set Series Episode Runtime to median of all episodes: " + str(metadata.duration) + " (" + str (duration_min) + " minutes)")
 			except:
-				Log("Couldn't set Series Episode Runtime to median!")
+				self.DLog("Couldn't set Series Episode Runtime to median!")
 				pass
 		else:
-			Log("Series Episode Runtime already set!")
+			self.DLog("Series Episode Runtime already set!")
 		Dict.Reset()
