@@ -434,37 +434,14 @@ class xbmcnfo(Agent.TV_Shows):
 										except: pass
 										# Ep. Premiere
 										try:
-											try:
-												self.DLog("Reading aired tag...")
-												air_string = nfoXML.xpath("aired")[0].text
-											except:
-												self.DLog("No aired tag found...")
-												pass
-											if air_string:
-												air_date = None
-												try:
-													self.DLog("Airdate parsing with dBY...")
-													air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%d %B %Y")
-												except: pass
-												try:
-													if not air_date:
-														self.DLog("Airdate parsing with Ymd...")
-														air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%Y-%m-%d")
-												except: pass
-												try:
-													if not air_date:
-														self.DLog("Airdate parsing with dmY...")
-														air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%d.%m.%Y")
-												except: pass
-												try:
-													if not air_date:
-														self.DLog("Fallback to dateadded instead...")
-														air_date = time.strptime(nfoXML.xpath("dateadded")[0].text, "%Y-%m-%d")
-												except: pass
-												if air_date:
-													metadata.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(air_date)).date()
-										except Exception:
-											self.DLog("Exception: " + traceback.format_exc())
+											self.DLog("Reading aired tag...")
+											aired = nfoXML.xpath("aired")[0].text
+										except:
+											self.DLog("No aired tag found...")
+											aired = None
+											pass
+										if aired:
+											metadata.originally_available_at = Datetime.ParseDate(aired).date()
 										# Ep. Summary
 										try: episode.summary = nfoXML.xpath('plot')[0].text
 										except: pass
