@@ -441,7 +441,7 @@ class xbmcnfo(Agent.TV_Shows):
 											aired = None
 											pass
 										if aired:
-											metadata.originally_available_at = Datetime.ParseDate(air_date).date()
+											metadata.originally_available_at = Datetime.ParseDate(aired).date()
 										# Ep. Summary
 										try: episode.summary = nfoXML.xpath('plot')[0].text
 										except: pass
