@@ -239,9 +239,35 @@ class xbmcnfo(Agent.TV_Shows):
 				except: pass
 				# Premiere
 				try:
-					try: metadata.originally_available_at = parse_date(nfoXML.xpath("premiered")[0].text)
-					except: metadata.originally_available_at = parse_date(nfoXML.xpath("dateadded")[0].text)
-				except: pass
+					air_string = None
+					try:
+						self.DLog("Reading premiered tag...")
+						air_string = nfoXML.xpath("premiered")[0].text
+						self.DLog("Premiered tag is: " + air_string)
+					except:
+						self.DLog("No premiered tag found...")
+						pass
+					if not air_string:
+						try:
+							self.DLog("Reading aired tag...")
+							air_string = nfoXML.xpath("aired")[0].text
+							self.DLog("Aired tag is: " + air_string)
+						except:
+							self.DLog("No aired tag found...")
+							pass
+					if not air_string:
+						try:
+							self.DLog("Reading dateadded tag...")
+							air_string = nfoXML.xpath("dateadded")[0].text
+							self.DLog("Dateadded tag is: " + air_string)
+						except:
+							self.DLog("No dateadded tag found...")
+							pass
+					if air_string:
+						metadata.originally_available_at = parse_date(air_string)
+				except:
+					self.DLog("Exception parsing Premiere: " + traceback.format_exc())
+					pass
 				# Tagline
 				try: metadata.tagline = nfoXML.findall("tagline")[0].text
 				except: pass
@@ -434,46 +460,52 @@ class xbmcnfo(Agent.TV_Shows):
 										except: pass
 										# Ep. Premiere
 										try:
+											air_string = None
 											try:
 												self.DLog("Reading aired tag...")
 												air_string = nfoXML.xpath("aired")[0].text
+												self.DLog("Aired tag is: " + air_string)
 											except:
 												self.DLog("No aired tag found...")
 												pass
+											if not air_string:
+												try:
+													self.DLog("Reading dateadded tag...")
+													air_string = nfoXML.xpath("dateadded")[0].text
+													self.DLog("Dateadded tag is: " + air_string)
+												except:
+													self.DLog("No dateadded tag found...")
+													pass
 											if air_string:
-												air_date = None
-												try:
-													self.DLog("Airdate parsing with dBY...")
-													air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%d %B %Y")
-												except: pass
-												try:
-													if not air_date:
-														self.DLog("Airdate parsing with Ymd...")
-														air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%Y-%m-%d")
-												except: pass
-												try:
-													if not air_date:
-														self.DLog("Airdate parsing with dmY...")
-														air_date = time.strptime(nfoXML.xpath("aired")[0].text, "%d.%m.%Y")
-												except: pass
-												try:
-													if not air_date:
-														self.DLog("Fallback to dateadded instead...")
-														air_date = time.strptime(nfoXML.xpath("dateadded")[0].text, "%Y-%m-%d")
-												except: pass
-												if air_date:
-													metadata.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(air_date)).date()
-										except Exception:
-											self.DLog("Exception: " + traceback.format_exc())
+												episode.originally_available_at = parse_date(air_string)
+										except:
+											self.DLog("Exception parsing Ep Premiere: " + traceback.format_exc())
+											pass
 										# Ep. Summary
 										try: episode.summary = nfoXML.xpath('plot')[0].text
 										except: pass
-										# Ep. Writers (Credits)
-										try: 
+										# Ep. Producers / Writers / Guest Stars(Credits)
+										try:
+											credit_string = None
 											credits = nfoXML.xpath('credits')
+											episode.producers.clear()
 											episode.writers.clear()
-											[episode.writers.add(c.strip()) for creditXML in credits for c in creditXML.text.split("/")]
+											episode.guest_stars.clear()
+											for creditXML in credits:
+												for credit in creditXML.text.split("/"):
+													credit_string = credit.strip()
+													if "(Producer)" in credit_string:
+														#self.DLog ("Credit (Producer): " + credit_string)
+														episode.producers.add(credit_string)
+													if "(Writer)" in credit_string:
+														#self.DLog ("Credit (Writer): " + credit_string)
+														episode.writers.add(credit_string)
+													if "(Guest Star)" in credit_string:
+														#self.DLog ("Credit (Guest Star): " + credit_string)
+														episode.guest_stars.add(credit_string)
+											episode.producers.discard('')
 											episode.writers.discard('')
+											episode.guest_stars.discard('')
 										except: pass
 										# Ep. Directors
 										try: 
@@ -525,11 +557,6 @@ class xbmcnfo(Agent.TV_Shows):
 												Log("Found episode thumb " + thumbURL)
 												try: episode.thumbs[thumbURL] = Proxy.Media(HTTP.Request(thumbURL))
 												except: pass
-												
-										# try:
-												# ep_summary = episode.summary.replace("\n", " ")
-										# except:
-												# ep_summary = episode.summary
 										
 										Log("---------------------")
 										Log("Episode (S"+season_num.zfill(2)+"E"+ep_num.zfill(2)+") nfo Information")
