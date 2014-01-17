@@ -241,19 +241,19 @@ class xbmcnfo(Agent.TV_Shows):
 				try:
 					air_string = None
 					try:
-						self.DLog("Reading premiered tag...")
-						air_string = nfoXML.xpath("premiered")[0].text
-						self.DLog("Premiered tag is: " + air_string)
+						self.DLog("Reading aired tag...")
+						air_string = nfoXML.xpath("aired")[0].text
+						self.DLog("Aired tag is: " + air_string)
 					except:
-						self.DLog("No premiered tag found...")
+						self.DLog("No aired tag found...")
 						pass
 					if not air_string:
 						try:
-							self.DLog("Reading aired tag...")
-							air_string = nfoXML.xpath("aired")[0].text
-							self.DLog("Aired tag is: " + air_string)
+							self.DLog("Reading premiered tag...")
+							air_string = nfoXML.xpath("premiered")[0].text
+							self.DLog("Premiered tag is: " + air_string)
 						except:
-							self.DLog("No aired tag found...")
+							self.DLog("No premiered tag found...")
 							pass
 					if not air_string:
 						try:
@@ -496,13 +496,13 @@ class xbmcnfo(Agent.TV_Shows):
 													credit_string = credit.strip()
 													if "(Producer)" in credit_string:
 														#self.DLog ("Credit (Producer): " + credit_string)
-														episode.producers.add(credit_string)
+														episode.producers.add(credit_string.replace(" (Producer)",""))
 													if "(Writer)" in credit_string:
 														#self.DLog ("Credit (Writer): " + credit_string)
-														episode.writers.add(credit_string)
+														episode.writers.add(credit_string.replace(" (Writer)",""))
 													if "(Guest Star)" in credit_string:
 														#self.DLog ("Credit (Guest Star): " + credit_string)
-														episode.guest_stars.add(credit_string)
+														episode.guest_stars.add(credit_string.replace(" (Guest Star)",""))
 											episode.producers.discard('')
 											episode.writers.discard('')
 											episode.guest_stars.discard('')
