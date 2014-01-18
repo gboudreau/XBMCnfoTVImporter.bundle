@@ -119,6 +119,7 @@ class xbmcnfo(Agent.TV_Shows):
 		self.pc = '\\' if platform.system() == 'Windows' else '/'
 
 		Dict.Reset()
+		metadata.duration = 0
 		id = media.id
 		duration_key = 'duration_'+id
 		Dict[duration_key] = [0] * 200
@@ -593,5 +594,5 @@ class xbmcnfo(Agent.TV_Shows):
 				self.DLog("Couldn't set Series Episode Runtime to median!")
 				pass
 		else:
-			self.DLog("Series Episode Runtime already set!")
+			self.DLog("Series Episode Runtime already set! Current value is:" + str(metadata.duration))
 		Dict.Reset()
