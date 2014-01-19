@@ -119,7 +119,7 @@ class xbmcnfo(Agent.TV_Shows):
 		self.pc = '\\' if platform.system() == 'Windows' else '/'
 
 		Dict.Reset()
-		metadata.duration = 0
+		metadata.duration = None
 		id = media.id
 		duration_key = 'duration_'+id
 		Dict[duration_key] = [0] * 200
@@ -373,34 +373,35 @@ class xbmcnfo(Agent.TV_Shows):
 					
 					firstEpisodePath = XML.ElementFromURL(pageUrl).xpath('//Part')[0].get('file')
 					seasonPath = os.path.dirname(firstEpisodePath)
-					seasonFilenameFolderJpg = 'folder.jpg'
-					seasonPathFilenameFolderJpg = seasonPath + self.pc + seasonFilenameFolderJpg
-					Log("Found poster '" + seasonFilenameFolderJpg + "' - path '" + seasonPathFilenameFolderJpg + "' -CR.")
-					if(int(season_num) == 0):
-						seasonFilenameEden = 'season-specials.tbn'
-					else:
-						seasonFilenameEden = 'season%(number)02d.tbn' % {"number": int(season_num)}
-					seasonPathFilenameEden = path + self.pc + seasonFilenameEden
-					if(int(season_num) == 0):
-						seasonFilenameFrodo = 'season-specials-poster.jpg'
-					else:
-						seasonFilenameFrodo = 'season%(number)02d-poster.jpg' % {"number": int(season_num)}
-					seasonPathFilenameFrodo = path + self.pc + seasonFilenameFrodo
+
 					seasonFilename = ""
 					seasonPathFilename = ""
-					if os.path.exists(seasonPathFilenameEden):
-						seasonFilename = seasonFilenameEden
-						seasonPathFilename = seasonPathFilenameEden
-					elif os.path.exists(seasonPathFilenameFrodo):
-						seasonFilename = seasonFilenameFrodo
-						seasonPathFilename = seasonPathFilenameFrodo
-					elif os.path.exists(seasonPathFilenameFolderJpg):
-						seasonFilename = seasonFilenameFolderJpg
-						seasonPathFilename = seasonPathFilenameFolderJpg
-					if seasonPathFilename:
-						seasonData = Core.storage.load(seasonPathFilename)
+					if(int(season_num) == 0):
+						seasonFilenameFrodo = 'season-specials-poster.jpg'
+						seasonFilenameEden = 'season-specials.tbn'
+					else:
+						seasonFilenameFrodo = 'season%(number)02d-poster.jpg' % {"number": int(season_num)}
+						seasonFilenameEden = 'season%(number)02d.tbn' % {"number": int(season_num)}
+
+					seasonPosterNames = []
+
+					#Frodo
+					seasonPosterNames.append (path + self.pc + seasonFilenameFrodo)
+					seasonPosterNames.append (seasonPath + self.pc + seasonFilenameFrodo)
+					#Eden
+					seasonPosterNames.append (path + self.pc + seasonFilenameEden)
+					seasonPosterNames.append (seasonPath + self.pc + seasonFilenameEden)
+					#DLNA
+					seasonPosterNames.append (seasonPath + self.pc + "folder.jpg")
+
+					# check possible season poster file locations
+					seasonPosterFilename = self.checkFilePaths (seasonPosterNames, 'season poster')
+
+					if seasonPosterFilename:
+						seasonData = Core.storage.load(seasonPosterFilename)
 						metadata.seasons[season_num].posters[seasonFilename] = Proxy.Media(seasonData)
-						Log('Found season image at ' + seasonPathFilename)
+						Log('Found season poster image at ' + seasonPosterFilename)
+
 					episodeXML = []
 					for episodeXML in episodes:
 						ep_num = episodeXML.get('index')
@@ -527,38 +528,24 @@ class xbmcnfo(Agent.TV_Shows):
 										except:
 											episode.duration = metadata.duration if metadata.duration else None
 											self.DLog ("No Episode Duration in episodes .nfo file.")
-										
-										thumbPathFilenameDLNA = nfoFile.replace('.nfo', '.jpg')
-										thumbFilenameDLNA = thumbPathFilenameDLNA.replace(path+self.pc, '')
-										Log("Found thumb '" + thumbFilenameDLNA + "' - path '" + thumbPathFilenameDLNA + "' -CR.")
-										thumbPathFilenameEden = nfoFile.replace('.nfo', '.tbn')
-										thumbFilenameEden = thumbPathFilenameEden.replace(path+self.pc, '')
-										thumbPathFilenameFrodo = nfoFile.replace('.nfo', '-thumb.jpg')
-										thumbFilenameFrodo = thumbPathFilenameFrodo.replace(path+self.pc, '')
-										thumbPathFilename = ""
-										thumbFilename = ""
-										
-										if os.path.exists(thumbPathFilenameEden):
-											thumbFilename = thumbFilenameEden
-											thumbPathFilename = thumbPathFilenameEden
-										elif os.path.exists(thumbPathFilenameFrodo):
-											thumbFilename = thumbFilenameFrodo
-											thumbPathFilename = thumbPathFilenameFrodo
-										elif os.path.exists(thumbPathFilenameDLNA):
-											thumbFilename = thumbFilenameDLNA
-											thumbPathFilename = thumbPathFilenameDLNA
-										if thumbPathFilename:
-											thumbData = Core.storage.load(thumbPathFilename)
-											episode.thumbs[thumbFilename] = Proxy.Media(thumbData)
-											Log("Found episode thumb " + thumbPathFilename)
-										else:
-											m = nfoXML.xpath("thumb")
-											if len(m) > 0:
-												thumbURL = m[0].text
-												Log("Found episode thumb " + thumbURL)
-												try: episode.thumbs[thumbURL] = Proxy.Media(HTTP.Request(thumbURL))
-												except: pass
-										
+
+										episodeThumbNames = []
+
+										#Frodo
+										episodeThumbNames.append (nfoFile.replace('.nfo', '-thumb.jpg'))
+										#Eden
+										episodeThumbNames.append (nfoFile.replace('.nfo', '.tbn'))
+										#DLNA
+										episodeThumbNames.append (nfoFile.replace('.nfo', '.jpg'))
+
+										# check possible episode thumb file locations
+										episodeThumbFilename = self.checkFilePaths (episodeThumbNames, 'episode thumb')
+
+										if episodeThumbFilename:
+											thumbData = Core.storage.load(episodeThumbFilename)
+											episode.thumbs[episodeThumbFilename] = Proxy.Media(thumbData)
+											Log('Found episode thumb image at ' + episodeThumbFilename)
+
 										Log("---------------------")
 										Log("Episode (S"+season_num.zfill(2)+"E"+ep_num.zfill(2)+") nfo Information")
 										Log("---------------------")
@@ -585,14 +572,20 @@ class xbmcnfo(Agent.TV_Shows):
 										Log("ERROR: <episodedetails> tag not found in episode NFO file " + nfoFile)
 
 		# Final Steps
-		if metadata.duration == 0:
+		duration_min = 0
+		duration_string = ""
+		if metadata.duration == None:
 			try:
 				duration_min = Dict[duration_key].index(max(Dict[duration_key]))
-				metadata.duration = duration_min * 60 * 1000
-				self.DLog("Set Series Episode Runtime to median of all episodes: " + str(metadata.duration) + " (" + str (duration_min) + " minutes)")
+				for d in Dict[duration_key]:
+					if (d != 0):
+						duration_string = duration_string + "(" + str(Dict[duration_key].index(d)) + "min:" + str(d) + ")"
 			except:
-				self.DLog("Couldn't set Series Episode Runtime to median!")
+				self.DLog("Error accessing duration_key in dictionary!")
 				pass
+			self.DLog("Episode durations are: " + duration_string)
+			metadata.duration = duration_min * 60 * 1000
+			self.DLog("Set Series Episode Runtime to median of all episodes: " + str(metadata.duration) + " (" + str (duration_min) + " minutes)")
 		else:
 			self.DLog("Series Episode Runtime already set! Current value is:" + str(metadata.duration))
 		Dict.Reset()
