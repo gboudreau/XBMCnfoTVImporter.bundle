@@ -96,19 +96,22 @@ class xbmcnfo(Agent.TV_Shows):
 				except: pass
 				# ID
 				try: id = nfoXML.xpath("id")[0].text
-				except:
-					# if tv show id doesn't exist, create
-					# one based on hash of title
-					ord3 = lambda x : '%.3d' % ord(x) 
+				except e:
+					id = None
+
+				# if tv show id doesn't exist, create
+				# one based on hash of title
+				if not id:
+					ord3 = lambda x : '%.3d' % ord(x)
 					id = int(''.join(map(ord3, title)))
 					id = str(abs(hash(int(id))))
 					
-				Log('ID: ' + id)
-				Log('Title: ' + title)
+				Log('ID: ' + str(id))
+				Log('Title: ' + str(title))
 				Log('Year: ' + str(year))
 
 		results.Append(MetadataSearchResult(id=id, name=title, year=year, lang=lang, score=100))
-		Log('scraped results: ' + title + ' | year = ' + str(year) + ' | id = ' + id)
+		Log('scraped results: ' + str(title) + ' | year = ' + str(year) + ' | id = ' + str(id))
 
 ##### update Function #####
 	def update(self, metadata, media, lang):
