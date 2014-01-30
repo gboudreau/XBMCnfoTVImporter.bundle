@@ -435,8 +435,14 @@ class xbmcnfo(Agent.TV_Shows):
 									nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
 									nfoTextLower = nfoText.lower()
 									if nfoTextLower.count('<episodedetails') > 0 and nfoTextLower.count('</episodedetails>') > 0:
+										nfoepc = nfoTextLower.count('<episodedetails')
+										self.DLog("EPCount in nfo file: " + str(nfoepc))
+										nfopos = int(ep_num)
+										self.DLog("EPNum: " + str(nfopos))
+										while nfopos > nfoepc: nfopos = nfopos - nfoepc
+										self.DLog("EPNFOPos: " + str(nfopos))
 										# Remove URLs (or other stuff) at the end of the XML file
-										nfoText = '%s</episodedetails>' % nfoText.split('</episodedetails>')[0]
+										nfoText = '%s</episodedetails>' % nfoText.split('</episodedetails>')[nfopos-1]
 
 										self.DLog("Looks like an XBMC NFO file (has <episodedetails>)")
 										#likely an xbmc nfo file
