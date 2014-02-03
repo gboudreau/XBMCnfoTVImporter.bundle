@@ -1,4 +1,4 @@
-# xbmc-nfo importer
+# XBMCnfoTVImporter
 # spec'd from: http://wiki.xbmc.org/index.php?title=Import_-_Export_Library#Video_nfo_Files
 #
 # Original code author: Harley Hooligan
@@ -8,8 +8,8 @@
 #
 import os, re, time, datetime, platform, traceback
 
-class xbmcnfo(Agent.TV_Shows):
-	name = 'XBMC TV .nfo Importer'
+class xbmcnfotv(Agent.TV_Shows):
+	name = 'XBMCnfoTVImporter'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia']
