@@ -5,6 +5,7 @@
 # Modified by Guillaume Boudreau
 # Eden and Frodo compatibility added by Jorge Amigo
 # Cleanup and some extensions by SlrG
+# Logo by CrazyRabbit
 #
 import os, re, time, datetime, platform, traceback
 
