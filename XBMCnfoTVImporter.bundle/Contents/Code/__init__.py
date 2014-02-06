@@ -297,7 +297,7 @@ class xbmcnfotv(Agent.TV_Shows):
 				try:
 					sruntime = nfoXML.xpath("runtime")[0].text
 					duration = int(re.compile('^([0-9]+)').findall(sruntime)[0])
-					duration_ms = xbmcnfo.time_convert (self, duration)
+					duration_ms = xbmcnfotv.time_convert (self, duration)
 					metadata.duration = duration_ms
 					self.DLog("Set Series Episode Duration from " + str(duration) + " in tvshow.nfo file to " + str(duration_ms) + " in Plex.")
 				except:
@@ -530,7 +530,7 @@ class xbmcnfotv(Agent.TV_Shows):
 										try:
 											eruntime = nfoXML.xpath("runtime")[0].text
 											eduration = int(re.compile('^([0-9]+)').findall(eruntime)[0])
-											eduration_ms = xbmcnfo.time_convert (self, eduration)
+											eduration_ms = xbmcnfotv.time_convert (self, eduration)
 											episode.duration = eduration_ms
 											if (eduration > 0):
 												eduration_min = int(round (float(eduration_ms) / 1000 / 60))
