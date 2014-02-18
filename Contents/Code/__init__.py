@@ -7,7 +7,7 @@
 # Cleanup and some extensions by SlrG
 # Logo by CrazyRabbit
 #
-import os, re, time, datetime, platform, traceback
+import os, re, time, datetime, platform, traceback, glob
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
@@ -574,6 +574,12 @@ class xbmcnfotv(Agent.TV_Shows):
 											self.DLog ("No Episode Duration in episodes .nfo file.")
 
 										episodeThumbNames = []
+
+										#Multiepisode nfo thumbs
+										if nfoepc > 1:
+											for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.*'):
+												if "-E" in name: continue
+												episodeThumbNames.append (os.path.dirname(nfoFile) + self.pc + name)
 
 										#Frodo
 										episodeThumbNames.append (nfoFile.replace('.nfo', '-thumb.jpg'))
