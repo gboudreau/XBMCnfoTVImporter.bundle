@@ -41,6 +41,15 @@ class xbmcnfotv(Agent.TV_Shows):
 		else:
 			Log("No " + ftype + " file found! Aborting!")
 
+	def RemoveEmptyTags(self, xmltags):
+		for xmltag in xmltags.iter("*"):
+			if len(xmltag):
+				continue
+			if not (xmltag.text and xmltag.text.strip()):
+				#self.DLog("Removing empty XMLTag: " + xmltag.tag)
+				xmltag.getparent().remove(xmltag)
+		return xmltags
+
 ##### search function #####
 	def search(self, results, media, lang):
 		self.DLog("++++++++++++++++++++++++")
@@ -217,6 +226,11 @@ class xbmcnfotv(Agent.TV_Shows):
 				except:
 					self.DLog('ERROR: Cant parse XML in ' + nfoFile + '. Aborting!')
 					return
+
+				#remove empty xml tags
+				self.DLog('Removing empty XML tags from tvshows nfo...')
+				nfoXML = self.RemoveEmptyTags(nfoXML)
+
 				
 				# Title
 				try: metadata.title = nfoXML.xpath("title")[0].text
@@ -451,6 +465,10 @@ class xbmcnfotv(Agent.TV_Shows):
 										except:
 											self.DLog('ERROR: Cant parse XML in file: ' + nfoFile)
 											return
+
+										#remove empty xml tags
+										self.DLog('Removing empty XML Tags from episode nfo...')
+										nfoXML = self.RemoveEmptyTags(nfoXML)
 
 										# Ep. Title
 										try: episode.title = nfoXML.xpath('title')[0].text
