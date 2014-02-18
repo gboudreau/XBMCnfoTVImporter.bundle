@@ -7,7 +7,7 @@
 # Cleanup and some extensions by SlrG
 # Logo by CrazyRabbit
 #
-import os, re, time, datetime, platform, traceback
+import os, re, time, datetime, platform, traceback, glob
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
@@ -40,6 +40,22 @@ class xbmcnfotv(Agent.TV_Shows):
 				return pathfn
 		else:
 			Log("No " + ftype + " file found! Aborting!")
+
+	def RemoveEmptyTags(self, xmltags):
+		for xmltag in xmltags.iter("*"):
+			if len(xmltag):
+				continue
+			if not (xmltag.text and xmltag.text.strip()):
+				#self.DLog("Removing empty XMLTag: " + xmltag.tag)
+				xmltag.getparent().remove(xmltag)
+		return xmltags
+
+	def FloatRound(self, x):
+		if x % 1 >= 0.5:
+			x = round(x)
+		else:
+			x = round(x)+0.5
+		return x
 
 ##### search function #####
 	def search(self, results, media, lang):
@@ -141,6 +157,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		if not os.path.exists(nfoName):
 			nfoName = path1 + self.pc + "tvshow.nfo"
 			self.DLog('Looking for TV Show NFO file at ' + nfoName)
+			path = path1
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path1)
 
@@ -217,7 +234,11 @@ class xbmcnfotv(Agent.TV_Shows):
 				except:
 					self.DLog('ERROR: Cant parse XML in ' + nfoFile + '. Aborting!')
 					return
-				
+
+				#remove empty xml tags
+				self.DLog('Removing empty XML tags from tvshows nfo...')
+				nfoXML = self.RemoveEmptyTags(nfoXML)
+
 				# Title
 				try: metadata.title = nfoXML.xpath("title")[0].text
 				except:
@@ -227,7 +248,12 @@ class xbmcnfotv(Agent.TV_Shows):
 				try: metadata.original_title = nfoXML.xpath('originaltitle')[0].text
 				except: pass
 				# Rating
-				try: metadata.rating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
+				try:
+					rating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
+					if Prefs['fround']:
+						metadata.rating = self.FloatRound(rating)
+					else:
+						metadata.rating = rating
 				except: pass
 				# Content Rating
 				try:
@@ -452,6 +478,10 @@ class xbmcnfotv(Agent.TV_Shows):
 											self.DLog('ERROR: Cant parse XML in file: ' + nfoFile)
 											return
 
+										#remove empty xml tags
+										self.DLog('Removing empty XML Tags from episode nfo...')
+										nfoXML = self.RemoveEmptyTags(nfoXML)
+
 										# Ep. Title
 										try: episode.title = nfoXML.xpath('title')[0].text
 										except:
@@ -468,7 +498,12 @@ class xbmcnfotv(Agent.TV_Shows):
 											episode.content_rating = content_rating
 										except: pass
 										# Ep. Rating
-										try: episode.rating = float(nfoXML.xpath('rating')[0].text.replace(',', '.'))
+										try:
+											eprating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
+											if Prefs['fround']:
+												episode.rating = self.FloatRound(eprating)
+											else:
+												episode.rating = eprating
 										except: pass
 										# Ep. Premiere
 										try:
@@ -540,6 +575,12 @@ class xbmcnfotv(Agent.TV_Shows):
 											self.DLog ("No Episode Duration in episodes .nfo file.")
 
 										episodeThumbNames = []
+
+										#Multiepisode nfo thumbs
+										if nfoepc > 1:
+											for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.*'):
+												if "-E" in name: continue
+												episodeThumbNames.append (os.path.dirname(nfoFile) + self.pc + name)
 
 										#Frodo
 										episodeThumbNames.append (nfoFile.replace('.nfo', '-thumb.jpg'))

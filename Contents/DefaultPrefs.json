@@ -4,5 +4,11 @@
     "label":"enable debug logging",
     "type":"bool",
     "default":"false"
+  },
+  {
+    "id":"fround",
+    "label":"enable rounding of floating point ratings",
+    "type":"bool",
+    "default":"false"
   }
 ]
