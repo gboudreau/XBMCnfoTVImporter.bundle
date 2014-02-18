@@ -51,11 +51,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		return xmltags
 
 	def FloatRound(self, x):
-		if x % 1 >= 0.5:
-			x = round(x)
-		else:
-			x = round(x)+0.5
-		return x
+		return x + 0.5 / 2 - ((x + 0.5 / 2) % 0.5)
 
 ##### search function #####
 	def search(self, results, media, lang):
