@@ -157,6 +157,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		if not os.path.exists(nfoName):
 			nfoName = path1 + self.pc + "tvshow.nfo"
 			self.DLog('Looking for TV Show NFO file at ' + nfoName)
+			path = path1
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path1)
 
