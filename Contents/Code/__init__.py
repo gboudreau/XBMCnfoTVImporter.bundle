@@ -50,6 +50,13 @@ class xbmcnfotv(Agent.TV_Shows):
 				xmltag.getparent().remove(xmltag)
 		return xmltags
 
+	def FloatRound(self, x):
+		if x % 1 >= 0.5:
+			x = round(x)
+		else:
+			x = round(x)+0.5
+		return x
+
 ##### search function #####
 	def search(self, results, media, lang):
 		self.DLog("++++++++++++++++++++++++")
@@ -231,7 +238,6 @@ class xbmcnfotv(Agent.TV_Shows):
 				self.DLog('Removing empty XML tags from tvshows nfo...')
 				nfoXML = self.RemoveEmptyTags(nfoXML)
 
-				
 				# Title
 				try: metadata.title = nfoXML.xpath("title")[0].text
 				except:
@@ -241,7 +247,12 @@ class xbmcnfotv(Agent.TV_Shows):
 				try: metadata.original_title = nfoXML.xpath('originaltitle')[0].text
 				except: pass
 				# Rating
-				try: metadata.rating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
+				try:
+					rating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
+					if Prefs['fround']:
+						metadata.rating = self.FloatRound(rating)
+					else:
+						metadata.rating = rating
 				except: pass
 				# Content Rating
 				try:
@@ -486,7 +497,12 @@ class xbmcnfotv(Agent.TV_Shows):
 											episode.content_rating = content_rating
 										except: pass
 										# Ep. Rating
-										try: episode.rating = float(nfoXML.xpath('rating')[0].text.replace(',', '.'))
+										try:
+											eprating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
+											if Prefs['fround']:
+												episode.rating = self.FloatRound(eprating)
+											else:
+												episode.rating = eprating
 										except: pass
 										# Ep. Premiere
 										try:
