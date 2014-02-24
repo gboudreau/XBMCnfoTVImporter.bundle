@@ -78,8 +78,7 @@ class xbmcnfotv(Agent.TV_Shows):
 
 		if not os.path.exists(nfoName):
 			self.DLog("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
-			path = os.path.dirname(path1)
-			title = os.path.basename(path)
+			title = os.path.basename(os.path.normpath(os.path.dirname(nfoName)))
 			Log("Using tvshow.title = " + title)
 		else:
 			nfoFile = nfoName
@@ -112,16 +111,16 @@ class xbmcnfotv(Agent.TV_Shows):
 				except e:
 					id = None
 
-				# if tv show id doesn't exist, create
-				# one based on hash of title
-				if not id:
-					ord3 = lambda x : '%.3d' % ord(x)
-					id = int(''.join(map(ord3, title)))
-					id = str(abs(hash(int(id))))
-					
-				Log('ID: ' + str(id))
-				Log('Title: ' + str(title))
-				Log('Year: ' + str(year))
+		# if tv show id doesn't exist, create
+		# one based on hash of title
+		if not id:
+			ord3 = lambda x : '%.3d' % ord(x)
+			id = int(''.join(map(ord3, title)))
+			id = str(abs(hash(int(id))))
+			
+			Log('ID: ' + str(id))
+			Log('Title: ' + str(title))
+			Log('Year: ' + str(year))
 
 		results.Append(MetadataSearchResult(id=id, name=title, year=year, lang=lang, score=100))
 		Log('scraped results: ' + str(title) + ' | year = ' + str(year) + ' | id = ' + str(id))
@@ -212,8 +211,7 @@ class xbmcnfotv(Agent.TV_Shows):
 
 		if not os.path.exists(nfoName):
 			self.DLog("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
-			path = os.path.dirname(path1)
-			metadata.title = os.path.basename(path)
+			metadata.title = os.path.basename(os.path.normpath(os.path.dirname(nfoName)))
 			self.DLog("Using tvshow.title = " + metadata.title)
 		else:
 			nfoFile = nfoName
