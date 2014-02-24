@@ -108,7 +108,7 @@ class xbmcnfotv(Agent.TV_Shows):
 				except: pass
 				# ID
 				try: id = nfoXML.xpath("id")[0].text
-				except e:
+				except:
 					id = None
 
 		# if tv show id doesn't exist, create
