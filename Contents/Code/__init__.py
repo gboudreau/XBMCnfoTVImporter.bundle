@@ -11,6 +11,7 @@ import os, re, time, datetime, platform, traceback, glob
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
+	version = '1.0-0-gdfb4b68-95'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia']
@@ -58,6 +59,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("++++++++++++++++++++++++")
 		self.DLog("Entering search function")
 		self.DLog("++++++++++++++++++++++++")
+		Log ("" + self.name + " Version: " + self.version)
 
 		self.pc = '\\' if platform.system() == 'Windows' else '/'
 
@@ -130,6 +132,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("++++++++++++++++++++++++")
 		self.DLog("Entering update function")
 		self.DLog("++++++++++++++++++++++++")
+		Log ("" + self.name + " Version: " + self.version)
 
 		self.pc = '\\' if platform.system() == 'Windows' else '/'
 
@@ -417,6 +420,8 @@ class xbmcnfotv(Agent.TV_Shows):
 					seasonPosterNames.append (seasonPath + self.pc + seasonFilenameEden)
 					#DLNA
 					seasonPosterNames.append (seasonPath + self.pc + "folder.jpg")
+					#Fallback to Series Poster
+					seasonPosterNames.append (path + self.pc + "poster.jpg")
 
 					# check possible season poster file locations
 					seasonPosterFilename = self.checkFilePaths (seasonPosterNames, 'season poster')
