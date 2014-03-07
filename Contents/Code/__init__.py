@@ -624,7 +624,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		# Final Steps
 		duration_min = 0
 		duration_string = ""
-		if metadata.duration == None:
+		if not metadata.duration:
 			try:
 				duration_min = Dict[duration_key].index(max(Dict[duration_key]))
 				for d in Dict[duration_key]:
