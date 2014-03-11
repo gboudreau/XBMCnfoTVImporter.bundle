@@ -11,10 +11,10 @@ import os, re, time, datetime, platform, traceback, glob
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-0-gdfb4b68-95'
+	version = '1.0-4-g1e777c0-99'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
-	accepts_from = ['com.plexapp.agents.localmedia']
+	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi']
 	pc = '/';
 
 ##### helper functions #####
