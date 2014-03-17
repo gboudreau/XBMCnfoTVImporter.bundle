@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-4-g1e777c0-99'
+	version = '1.0-9-gd9c1277-104'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -318,13 +318,18 @@ class xbmcnfotv(Agent.TV_Shows):
 				except: pass
 				# Duration
 				try:
-					sruntime = nfoXML.xpath("runtime")[0].text
-					duration = int(re.compile('^([0-9]+)').findall(sruntime)[0])
-					duration_ms = xbmcnfotv.time_convert (self, duration)
-					metadata.duration = duration_ms
-					self.DLog("Set Series Episode Duration from " + str(duration) + " in tvshow.nfo file to " + str(duration_ms) + " in Plex.")
+					sruntime = nfoXML.xpath("durationinseconds")[0].text
+					metadata.duration = int(re.compile('^([0-9]+)').findall(sruntime)[0]) * 1000
 				except:
-					self.DLog("No Series Episode Duration in tvschow.nfo file.")
+					try:
+						sruntime = nfoXML.xpath("runtime")[0].text
+						duration = int(re.compile('^([0-9]+)').findall(sruntime)[0])
+						duration_ms = xbmcnfotv.time_convert (self, duration)
+						metadata.duration = duration_ms
+						self.DLog("Set Series Episode Duration from " + str(duration) + " in tvshow.nfo file to " + str(duration_ms) + " in Plex.")
+					except:
+						self.DLog("No Series Episode Duration in tvschow.nfo file.")
+						pass
 				# Actors
 				metadata.roles.clear()
 				for actor in nfoXML.xpath('actor'):
@@ -562,16 +567,25 @@ class xbmcnfotv(Agent.TV_Shows):
 										except: pass
 										# Ep. Duration
 										try:
-											eruntime = nfoXML.xpath("runtime")[0].text
-											eduration = int(re.compile('^([0-9]+)').findall(eruntime)[0])
-											eduration_ms = xbmcnfotv.time_convert (self, eduration)
+											eruntime = nfoXML.xpath("durationinseconds")[0].text
+											eduration_ms = int(re.compile('^([0-9]+)').findall(eruntime)[0]) * 1000
 											episode.duration = eduration_ms
-											if (eduration > 0):
+										except:
+											try:
+												eruntime = nfoXML.xpath("runtime")[0].text
+												eduration = int(re.compile('^([0-9]+)').findall(eruntime)[0])
+												eduration_ms = xbmcnfotv.time_convert (self, eduration)
+												episode.duration = eduration_ms
+											except:
+												episode.duration = metadata.duration if metadata.duration else None
+												self.DLog ("No Episode Duration in episodes .nfo file.")
+												pass
+										try:
+											if (eduration_ms > 0):
 												eduration_min = int(round (float(eduration_ms) / 1000 / 60))
 												Dict[duration_key][eduration_min] = Dict[duration_key][eduration_min] + 1
 										except:
-											episode.duration = metadata.duration if metadata.duration else None
-											self.DLog ("No Episode Duration in episodes .nfo file.")
+											pass
 
 										episodeThumbNames = []
 
