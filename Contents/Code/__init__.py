@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-9-gd9c1277-104'
+	version = '1.0-10-g2f9e6eb-105'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -567,7 +567,11 @@ class xbmcnfotv(Agent.TV_Shows):
 										except: pass
 										# Ep. Duration
 										try:
-											eruntime = nfoXML.xpath("durationinseconds")[0].text
+											self.DLog ("Trying to read <durationinseconds> tag from episodes .nfo file.")
+											fileinfoXML = XML.ElementFromString(nfoText).xpath('fileinfo')[0]
+											streamdetailsXML = fileinfoXML.xpath('streamdetails')[0]
+											videoXML = streamdetailsXML.xpath('video')[0]
+											eruntime = videoXML.xpath("durationinseconds")[0].text
 											eduration_ms = int(re.compile('^([0-9]+)').findall(eruntime)[0]) * 1000
 											episode.duration = eduration_ms
 										except:
