@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-10-g2f9e6eb-105'
+	version = '1.0-12-g29e7bc2-107'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -462,6 +462,9 @@ class xbmcnfotv(Agent.TV_Shows):
 								if os.path.exists(nfoFile):
 									self.DLog("File exists...")
 									nfoText = Core.storage.load(nfoFile)
+									# strip media browsers <multiepisodenfo> tags
+									nfoText = nfoText.replace ('<multiepisodenfo>','')
+									nfoText = nfoText.rstrip ('</multiepisodenfo>')
 									# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
 									nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
 									nfoTextLower = nfoText.lower()
@@ -567,7 +570,7 @@ class xbmcnfotv(Agent.TV_Shows):
 										except: pass
 										# Ep. Duration
 										try:
-											self.DLog ("Trying to read <durationinseconds> tag from episodes .nfo file.")
+											self.DLog ("Trying to read <durationinseconds> tag from episodes .nfo file...")
 											fileinfoXML = XML.ElementFromString(nfoText).xpath('fileinfo')[0]
 											streamdetailsXML = fileinfoXML.xpath('streamdetails')[0]
 											videoXML = streamdetailsXML.xpath('video')[0]
@@ -576,6 +579,7 @@ class xbmcnfotv(Agent.TV_Shows):
 											episode.duration = eduration_ms
 										except:
 											try:
+												self.DLog ("Fallback to <runtime> tag from episodes .nfo file...")
 												eruntime = nfoXML.xpath("runtime")[0].text
 												eduration = int(re.compile('^([0-9]+)').findall(eruntime)[0])
 												eduration_ms = xbmcnfotv.time_convert (self, eduration)
