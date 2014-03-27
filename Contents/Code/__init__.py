@@ -464,7 +464,7 @@ class xbmcnfotv(Agent.TV_Shows):
 									nfoText = Core.storage.load(nfoFile)
 									# strip media browsers <multiepisodenfo> tags
 									nfoText = nfoText.replace ('<multiepisodenfo>','')
-									nfoText = nfoText.rstrip ('</multiepisodenfo>')
+									nfoText = nfoText.replace ('</multiepisodenfo>','')
 									# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
 									nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
 									nfoTextLower = nfoText.lower()
