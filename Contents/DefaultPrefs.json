@@ -10,5 +10,23 @@
     "label":"enable rounding of floating point ratings",
     "type":"bool",
     "default":"false"
+  },
+  {
+    "id":"preserverating",
+    "label":"put .nfo rating in front of summary",
+    "type":"bool",
+    "default":"false"
+  },
+  {
+    "id":"beforerating",
+    "label":"text before rating:",
+    "type":"text",
+    "default":"* Official rating: ",
+  },
+  {
+    "id":"afterrating",
+    "label":"text after rating:",
+    "type":"text",
+    "default":"/10 * | ",
   }
 ]
