@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-12-g29e7bc2-107'
+	version = '1.0-16-g73ce962-111'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -244,14 +244,6 @@ class xbmcnfotv(Agent.TV_Shows):
 				# Original Title
 				try: metadata.original_title = nfoXML.xpath('originaltitle')[0].text
 				except: pass
-				# Rating
-				try:
-					rating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
-					if Prefs['fround']:
-						metadata.rating = self.FloatRound(rating)
-					else:
-						metadata.rating = rating
-				except: pass
 				# Content Rating
 				try:
 					mpaa = nfoXML.xpath('./mpaa')[0].text
@@ -301,6 +293,20 @@ class xbmcnfotv(Agent.TV_Shows):
 				except: pass
 				# Summary (Plot)
 				try: metadata.summary = nfoXML.xpath("plot")[0].text
+				except: pass
+				# Rating
+				try:
+					nforating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
+					if Prefs['fround']:
+						rating = self.FloatRound(nforating)
+					else:
+						rating = nforating
+					if Prefs['preserverating']:
+						self.DLog("Putting .nfo rating in front of summary!")
+						metadata.summary = str(Prefs['beforerating']) + "{:.1f}".format(nforating) + str(Prefs['afterrating']) + metadata.summary
+						metadata.rating = rating
+					else:
+						metadata.rating = rating
 				except: pass
 				# Genres
 				try:
@@ -504,14 +510,6 @@ class xbmcnfotv(Agent.TV_Shows):
 												content_rating = 'NR'
 											episode.content_rating = content_rating
 										except: pass
-										# Ep. Rating
-										try:
-											eprating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
-											if Prefs['fround']:
-												episode.rating = self.FloatRound(eprating)
-											else:
-												episode.rating = eprating
-										except: pass
 										# Ep. Premiere
 										try:
 											air_string = None
@@ -537,6 +535,20 @@ class xbmcnfotv(Agent.TV_Shows):
 											pass
 										# Ep. Summary
 										try: episode.summary = nfoXML.xpath('plot')[0].text
+										except: pass
+										# Ep. Rating
+										try:
+											epnforating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
+											if Prefs['fround']:
+												eprating = self.FloatRound(epnforating)
+											else:
+												eprating = epnforating
+											if Prefs['preserverating']:
+												self.DLog("Putting Ep .nfo rating in front of summary!")
+												episode.summary = str(Prefs['beforerating']) + "{:.1f}".format(epnforating) + str(Prefs['afterrating']) + episode.summary
+												episode.rating = eprating
+											else:
+												episode.rating = eprating
 										except: pass
 										# Ep. Producers / Writers / Guest Stars(Credits)
 										try:
