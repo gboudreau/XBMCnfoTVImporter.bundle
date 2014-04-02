@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-16-g73ce962-111'
+	version = '1.0-18-g6db8a01-113'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -543,9 +543,9 @@ class xbmcnfotv(Agent.TV_Shows):
 												eprating = self.FloatRound(epnforating)
 											else:
 												eprating = epnforating
-											if Prefs['preserverating']:
+											if Prefs['preserveratingep']:
 												self.DLog("Putting Ep .nfo rating in front of summary!")
-												episode.summary = str(Prefs['beforerating']) + "{:.1f}".format(epnforating) + str(Prefs['afterrating']) + episode.summary
+												episode.summary = str(Prefs['beforeratingep']) + "{:.1f}".format(epnforating) + str(Prefs['afterratingep']) + episode.summary
 												episode.rating = eprating
 											else:
 												episode.rating = eprating
