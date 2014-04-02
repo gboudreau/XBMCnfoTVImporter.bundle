@@ -28,5 +28,23 @@
     "label":"text after rating:",
     "type":"text",
     "default":"/10 * | ",
+  },
+  {
+    "id":"preserveratingep",
+    "label":"put .nfo rating in front of episode summary",
+    "type":"bool",
+    "default":"false"
+  },
+  {
+    "id":"beforeratingep",
+    "label":"text before episode rating:",
+    "type":"text",
+    "default":"* ",
+  },
+  {
+    "id":"afterratingep",
+    "label":"text after episode rating:",
+    "type":"text",
+    "default":"/10 * | ",
   }
 ]
