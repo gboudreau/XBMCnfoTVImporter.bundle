@@ -19,15 +19,15 @@
   },
   {
     "id":"beforerating",
-    "label":"text before rating:",
+    "label":"text before rating (supports html specialchars!):",
     "type":"text",
-    "default":"* Official rating: ",
+    "default":"&#9733; ",
   },
   {
     "id":"afterrating",
-    "label":"text after rating:",
+    "label":"text after rating (supports html specialchars!):",
     "type":"text",
-    "default":"/10 * | ",
+    "default":"/10 | ",
   },
   {
     "id":"preserveratingep",
@@ -37,14 +37,14 @@
   },
   {
     "id":"beforeratingep",
-    "label":"text before episode rating:",
+    "label":"text before episode rating (supports html specialchars!):",
     "type":"text",
-    "default":"* ",
+    "default":"&#9733; ",
   },
   {
     "id":"afterratingep",
-    "label":"text after episode rating:",
+    "label":"text after episode rating (supports html specialchars!):",
     "type":"text",
-    "default":"/10 * | ",
+    "default":"/10 | ",
   }
 ]

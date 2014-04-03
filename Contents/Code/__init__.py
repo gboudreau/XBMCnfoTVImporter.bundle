@@ -7,11 +7,11 @@
 # Cleanup and some extensions by SlrG
 # Logo by CrazyRabbit
 #
-import os, re, time, datetime, platform, traceback, glob
+import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-18-g6db8a01-113'
+	version = '1.0-20-g73cabdb-115'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -53,6 +53,33 @@ class xbmcnfotv(Agent.TV_Shows):
 
 	def FloatRound(self, x):
 		return x + 0.5 / 2 - ((x + 0.5 / 2) % 0.5)
+
+	##
+	# Removes HTML or XML character references and entities from a text string.
+	# Copyright: http://effbot.org/zone/re-sub.htm October 28, 2006 | Fredrik Lundh
+	# @param text The HTML (or XML) source text.
+	# @return The plain text, as a Unicode string, if necessary.
+
+	def unescape(self, text):
+		def fixup(m):
+			text = m.group(0)
+			if text[:2] == "&#":
+				# character reference
+				try:
+					if text[:3] == "&#x":
+						return unichr(int(text[3:-1], 16))
+					else:
+						return unichr(int(text[2:-1]))
+				except ValueError:
+					pass
+			else:
+				# named entity
+				try:
+					text = unichr(htmlentitydefs.name2codepoint[text[1:-1]])
+				except KeyError:
+					pass
+			return text # leave as is
+		return re.sub("&#?\w+;", fixup, text)
 
 ##### search function #####
 	def search(self, results, media, lang):
@@ -302,12 +329,12 @@ class xbmcnfotv(Agent.TV_Shows):
 					else:
 						rating = nforating
 					if Prefs['preserverating']:
-						self.DLog("Putting .nfo rating in front of summary!")
-						metadata.summary = str(Prefs['beforerating']) + "{:.1f}".format(nforating) + str(Prefs['afterrating']) + metadata.summary
+						metadata.summary = self.unescape(str(Prefs['beforerating'])) + "{:.1f}".format(nforating) + self.unescape(str(Prefs['afterrating'])) + metadata.summary
 						metadata.rating = rating
 					else:
 						metadata.rating = rating
-				except: pass
+				except:
+					pass
 				# Genres
 				try:
 					genres = nfoXML.xpath('genre')
@@ -545,7 +572,7 @@ class xbmcnfotv(Agent.TV_Shows):
 												eprating = epnforating
 											if Prefs['preserveratingep']:
 												self.DLog("Putting Ep .nfo rating in front of summary!")
-												episode.summary = str(Prefs['beforeratingep']) + "{:.1f}".format(epnforating) + str(Prefs['afterratingep']) + episode.summary
+												episode.summary = self.unescape(str(Prefs['beforeratingep'])) + "{:.1f}".format(epnforating) + self.unescape(str(Prefs['afterratingep'])) + episode.summary
 												episode.rating = eprating
 											else:
 												episode.rating = eprating
