@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-20-g73cabdb-115'
+	version = '1.0-22-gcb463b5-117'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -100,6 +100,10 @@ class xbmcnfotv(Agent.TV_Shows):
 		if not os.path.exists(nfoName):
 			nfoName = path1 + self.pc + "tvshow.nfo"
 			self.DLog('Looking for TV Show NFO file at ' + nfoName)
+		if not os.path.exists(nfoName):
+			path2 = os.path.dirname(os.path.dirname(path))
+			nfoName = path2 + self.pc + "tvshow.nfo"
+			self.DLog('Looking for TV Show NFO file at ' + nfoName)
 
 		id = media.id
 		year = 0
@@ -183,6 +187,11 @@ class xbmcnfotv(Agent.TV_Shows):
 			nfoName = path1 + self.pc + "tvshow.nfo"
 			self.DLog('Looking for TV Show NFO file at ' + nfoName)
 			path = path1
+		if not os.path.exists(nfoName):
+			path2 = os.path.dirname(os.path.dirname(path))
+			nfoName = path2 + self.pc + "tvshow.nfo"
+			self.DLog('Looking for TV Show NFO file at ' + nfoName)
+			path = path2
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path1)
 
