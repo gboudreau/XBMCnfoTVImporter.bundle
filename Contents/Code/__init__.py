@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-24-g920e0d4-119'
+	version = '1.0-26-ga8ca61c-121'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -594,12 +594,12 @@ class xbmcnfotv(Agent.TV_Shows):
 													if "(Producer)" in credit_string:
 														#self.DLog ("Credit (Producer): " + credit_string)
 														episode.producers.add(credit_string.replace(" (Producer)",""))
-													if "(Writer)" in credit_string:
-														#self.DLog ("Credit (Writer): " + credit_string)
-														episode.writers.add(credit_string.replace(" (Writer)",""))
-													if "(Guest Star)" in credit_string:
+													elif "(Guest Star)" in credit_string:
 														#self.DLog ("Credit (Guest Star): " + credit_string)
 														episode.guest_stars.add(credit_string.replace(" (Guest Star)",""))
+														#self.DLog ("Credit (Writer): " + credit_string)
+													else:
+														episode.writers.add(credit_string.replace(" (Writer)",""))
 											episode.producers.discard('')
 											episode.writers.discard('')
 											episode.guest_stars.discard('')
