@@ -11,11 +11,10 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-22-gcb463b5-117'
+	version = '1.0-24-g920e0d4-119'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
-	pc = '/';
 
 ##### helper functions #####
 	def DLog (self, LogMessage):
@@ -88,21 +87,19 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("++++++++++++++++++++++++")
 		Log ("" + self.name + " Version: " + self.version)
 
-		self.pc = '\\' if platform.system() == 'Windows' else '/'
-
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		self.DLog(media.primary_metadata)
 		path1 = os.path.dirname(String.Unquote(media.filename).encode('utf-8'))
 		self.DLog(path1)
 		path = os.path.dirname(path1)
-		nfoName = path + self.pc + "tvshow.nfo"
+		nfoName = os.path.join(path, "tvshow.nfo")
 		self.DLog('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
-			nfoName = path1 + self.pc + "tvshow.nfo"
+			nfoName = os.path.join(path1, "tvshow.nfo")
 			self.DLog('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
 			path2 = os.path.dirname(os.path.dirname(path))
-			nfoName = path2 + self.pc + "tvshow.nfo"
+			nfoName = os.path.join(path2, "tvshow.nfo")
 			self.DLog('Looking for TV Show NFO file at ' + nfoName)
 
 		id = media.id
@@ -165,8 +162,6 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("++++++++++++++++++++++++")
 		Log ("" + self.name + " Version: " + self.version)
 
-		self.pc = '\\' if platform.system() == 'Windows' else '/'
-
 		Dict.Reset()
 		metadata.duration = None
 		id = media.id
@@ -181,25 +176,25 @@ class xbmcnfotv(Agent.TV_Shows):
 		path = os.path.dirname(path1)
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		
-		nfoName = path + self.pc + "tvshow.nfo"
+		nfoName = os.path.join(path, "tvshow.nfo")
 		self.DLog('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
-			nfoName = path1 + self.pc + "tvshow.nfo"
+			nfoName = os.path.join(path1, "tvshow.nfo")
 			self.DLog('Looking for TV Show NFO file at ' + nfoName)
 			path = path1
 		if not os.path.exists(nfoName):
 			path2 = os.path.dirname(os.path.dirname(path))
-			nfoName = path2 + self.pc + "tvshow.nfo"
+			nfoName = os.path.join(path2, "tvshow.nfo")
 			self.DLog('Looking for TV Show NFO file at ' + nfoName)
 			path = path2
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path1)
 
 		posterNames = []
-		posterNames.append (path + self.pc + "poster.jpg")
-		posterNames.append (path + self.pc + "folder.jpg")
-		posterNames.append (path + self.pc + "show.jpg")
-		posterNames.append (path + self.pc + "season-all-poster.jpg")
+		posterNames.append (os.path.join(path, "poster.jpg"))
+		posterNames.append (os.path.join(path, "folder.jpg"))
+		posterNames.append (os.path.join(path, "show.jpg"))
+		posterNames.append (os.path.join(path, "season-all-poster.jpg"))
 
 		# check possible poster file locations
 		posterFilename = self.checkFilePaths (posterNames, 'poster')
@@ -210,8 +205,8 @@ class xbmcnfotv(Agent.TV_Shows):
 			Log('Found poster image at ' + posterFilename)
 
 		bannerNames = []
-		bannerNames.append (path + self.pc + "banner.jpg")
-		bannerNames.append (path + self.pc + "folder-banner.jpg")
+		bannerNames.append (os.path.join(path, "banner.jpg"))
+		bannerNames.append (os.path.join(path, "folder-banner.jpg"))
 
 		# check possible banner file locations
 		bannerFilename = self.checkFilePaths (bannerNames, 'banner')
@@ -223,10 +218,10 @@ class xbmcnfotv(Agent.TV_Shows):
 
 		fanartNames = []
 
-		fanartNames.append (path + self.pc + "fanart.jpg")
-		fanartNames.append (path + self.pc + "art.jpg")
-		fanartNames.append (path + self.pc + "backdrop.jpg")
-		fanartNames.append (path + self.pc + "background.jpg")
+		fanartNames.append (os.path.join(path, "fanart.jpg"))
+		fanartNames.append (os.path.join(path, "art.jpg"))
+		fanartNames.append (os.path.join(path, "backdrop.jpg"))
+		fanartNames.append (os.path.join(path, "background.jpg"))
 
 		# check possible fanart file locations
 		fanartFilename = self.checkFilePaths (fanartNames, 'fanart')
@@ -238,7 +233,7 @@ class xbmcnfotv(Agent.TV_Shows):
 
 		themeNames = []
 
-		themeNames.append (path + self.pc + "theme.mp3")
+		themeNames.append (os.path.join(path, "theme.mp3"))
 
 		# check possible theme file locations
 		themeFilename = self.checkFilePaths (themeNames, 'theme')
@@ -460,15 +455,15 @@ class xbmcnfotv(Agent.TV_Shows):
 					seasonPosterNames = []
 
 					#Frodo
-					seasonPosterNames.append (path + self.pc + seasonFilenameFrodo)
-					seasonPosterNames.append (seasonPath + self.pc + seasonFilenameFrodo)
+					seasonPosterNames.append (os.path.join(path, seasonFilenameFrodo))
+					seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameFrodo))
 					#Eden
-					seasonPosterNames.append (path + self.pc + seasonFilenameEden)
-					seasonPosterNames.append (seasonPath + self.pc + seasonFilenameEden)
+					seasonPosterNames.append (os.path.join(path, seasonFilenameEden))
+					seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameEden))
 					#DLNA
-					seasonPosterNames.append (seasonPath + self.pc + "folder.jpg")
+					seasonPosterNames.append (os.path.join(seasonPath, "folder.jpg"))
 					#Fallback to Series Poster
-					seasonPosterNames.append (path + self.pc + "poster.jpg")
+					seasonPosterNames.append (os.path.join(path, "poster.jpg"))
 
 					# check possible season poster file locations
 					seasonPosterFilename = self.checkFilePaths (seasonPosterNames, 'season poster')
@@ -649,7 +644,7 @@ class xbmcnfotv(Agent.TV_Shows):
 										if nfoepc > 1:
 											for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.*'):
 												if "-E" in name: continue
-												episodeThumbNames.append (os.path.dirname(nfoFile) + self.pc + name)
+												episodeThumbNames.append (os.path.join(os.path.dirname(nfoFile), name))
 
 										#Frodo
 										episodeThumbNames.append (nfoFile.replace('.nfo', '-thumb.jpg'))
