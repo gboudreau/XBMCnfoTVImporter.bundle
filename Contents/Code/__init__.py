@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-26-ga8ca61c-121'
+	version = '1.0-28-gdd441a5-123'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -315,7 +315,11 @@ class xbmcnfotv(Agent.TV_Shows):
 							self.DLog("No dateadded tag found...")
 							pass
 					if air_string:
-						metadata.originally_available_at = parse_date(air_string)
+						if not Prefs['correctdate']:
+							metadata.originally_available_at = parse_date(air_string)
+						else:
+							self.DLog("Apply date correction: " + Prefs['datestring'])
+							metadata.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring']))).date()
 				except:
 					self.DLog("Exception parsing Premiere: " + traceback.format_exc())
 					pass
@@ -560,7 +564,11 @@ class xbmcnfotv(Agent.TV_Shows):
 													self.DLog("No dateadded tag found...")
 													pass
 											if air_string:
-												episode.originally_available_at = parse_date(air_string)
+												if not Prefs['correctdate']:
+													episode.originally_available_at = parse_date(air_string)
+												else:
+													self.DLog("Apply date correction: " + Prefs['datestring'])
+													episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring']))).date()
 										except:
 											self.DLog("Exception parsing Ep Premiere: " + traceback.format_exc())
 											pass
