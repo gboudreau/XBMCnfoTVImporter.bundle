@@ -375,10 +375,12 @@ class xbmcnfotv(Agent.TV_Shows):
 				metadata.roles.clear()
 				for actor in nfoXML.xpath('actor'):
 					role = metadata.roles.new()
-					try: role.role = actor.xpath("role")[0].text
-					except: pass
 					try: role.actor = actor.xpath("name")[0].text
-					except: pass
+					except:
+						role.actor = "unknown"
+					try: role.role = actor.xpath("role")[0].text
+					except:
+						role.role = "unknown"
 					try: role.photo = actor.xpath("thumb")[0].text
 					except: pass
 					# if role.photo and role.photo != 'None' and role.photo != '':
