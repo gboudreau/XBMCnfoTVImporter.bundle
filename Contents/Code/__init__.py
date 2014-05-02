@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.0-28-gdd441a5-123'
+	version = '1.1-0-g57470ec-127'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -32,6 +32,7 @@ class xbmcnfotv(Agent.TV_Shows):
 
 	def checkFilePaths(self, pathfns, ftype):
 		for pathfn in pathfns:
+			if os.path.isdir(pathfn): continue
 			self.DLog("Trying " + pathfn)
 			if not os.path.exists(pathfn):
 				continue
@@ -450,10 +451,12 @@ class xbmcnfotv(Agent.TV_Shows):
 					seasonPath = os.path.dirname(firstEpisodePath)
 
 					seasonFilename = ""
+					seasonFilenameZero = ""
 					seasonPathFilename = ""
 					if(int(season_num) == 0):
 						seasonFilenameFrodo = 'season-specials-poster.jpg'
 						seasonFilenameEden = 'season-specials.tbn'
+						seasonFilenameZero = 'season00-poster.jpg'
 					else:
 						seasonFilenameFrodo = 'season%(number)02d-poster.jpg' % {"number": int(season_num)}
 						seasonFilenameEden = 'season%(number)02d.tbn' % {"number": int(season_num)}
@@ -462,7 +465,9 @@ class xbmcnfotv(Agent.TV_Shows):
 
 					#Frodo
 					seasonPosterNames.append (os.path.join(path, seasonFilenameFrodo))
+					seasonPosterNames.append (os.path.join(path, seasonFilenameZero))
 					seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameFrodo))
+					seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameZero))
 					#Eden
 					seasonPosterNames.append (os.path.join(path, seasonFilenameEden))
 					seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameEden))
@@ -470,6 +475,7 @@ class xbmcnfotv(Agent.TV_Shows):
 					seasonPosterNames.append (os.path.join(seasonPath, "folder.jpg"))
 					#Fallback to Series Poster
 					seasonPosterNames.append (os.path.join(path, "poster.jpg"))
+					seasonPosterNames.append (os.path.join(seasonPath, "poster.jpg"))
 
 					# check possible season poster file locations
 					seasonPosterFilename = self.checkFilePaths (seasonPosterNames, 'season poster')
