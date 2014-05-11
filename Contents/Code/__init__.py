@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.1-0-g57470ec-127'
+	version = '1.1-3-g0c86f51-130'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -320,7 +320,14 @@ class xbmcnfotv(Agent.TV_Shows):
 							metadata.originally_available_at = parse_date(air_string)
 						else:
 							self.DLog("Apply date correction: " + Prefs['datestring'])
-							metadata.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring']))).date()
+							if '*' in Prefs['datestring']:
+								for char in ['/','-','.']:
+									try:
+										metadata.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring'].replace('*', char)))).date()
+										self.DLog("Match found: " + Prefs['datestring'].replace('*', char))
+									except: pass
+							else:
+								metadata.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring']))).date()
 				except:
 					self.DLog("Exception parsing Premiere: " + traceback.format_exc())
 					pass
@@ -473,9 +480,9 @@ class xbmcnfotv(Agent.TV_Shows):
 					seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameEden))
 					#DLNA
 					seasonPosterNames.append (os.path.join(seasonPath, "folder.jpg"))
+					seasonPosterNames.append (os.path.join(seasonPath, "poster.jpg"))
 					#Fallback to Series Poster
 					seasonPosterNames.append (os.path.join(path, "poster.jpg"))
-					seasonPosterNames.append (os.path.join(seasonPath, "poster.jpg"))
 
 					# check possible season poster file locations
 					seasonPosterFilename = self.checkFilePaths (seasonPosterNames, 'season poster')
@@ -576,7 +583,14 @@ class xbmcnfotv(Agent.TV_Shows):
 													episode.originally_available_at = parse_date(air_string)
 												else:
 													self.DLog("Apply date correction: " + Prefs['datestring'])
-													episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring']))).date()
+													if '*' in Prefs['datestring']:
+														for char in ['/','-','.']:
+															try:
+																episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring'].replace('*', char)))).date()
+																self.DLog("Match found: " + Prefs['datestring'].replace('*', char))
+															except: pass
+													else:
+														episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring']))).date()
 										except:
 											self.DLog("Exception parsing Ep Premiere: " + traceback.format_exc())
 											pass
