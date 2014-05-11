@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.1-2-gd9c6c1e-129'
+	version = '1.1-3-g0c86f51-130'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -480,9 +480,9 @@ class xbmcnfotv(Agent.TV_Shows):
 					seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameEden))
 					#DLNA
 					seasonPosterNames.append (os.path.join(seasonPath, "folder.jpg"))
+					seasonPosterNames.append (os.path.join(seasonPath, "poster.jpg"))
 					#Fallback to Series Poster
 					seasonPosterNames.append (os.path.join(path, "poster.jpg"))
-					seasonPosterNames.append (os.path.join(seasonPath, "poster.jpg"))
 
 					# check possible season poster file locations
 					seasonPosterFilename = self.checkFilePaths (seasonPosterNames, 'season poster')
