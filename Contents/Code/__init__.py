@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.1-5-g2b00db9-132'
+	version = '1.1-6-gccaca2f-133'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -90,6 +90,7 @@ class xbmcnfotv(Agent.TV_Shows):
 
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		self.DLog(media.primary_metadata)
+		filename = os.path.basename(String.Unquote(media.filename).encode('utf-8'))
 		path1 = os.path.dirname(String.Unquote(media.filename).encode('utf-8'))
 		self.DLog(path1)
 		path = os.path.dirname(path1)
@@ -108,9 +109,17 @@ class xbmcnfotv(Agent.TV_Shows):
 		title = None
 
 		if not os.path.exists(nfoName):
-			self.DLog("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
-			title = os.path.basename(os.path.normpath(os.path.dirname(nfoName)))
-			Log("Using tvshow.title = " + title)
+			self.DLog("Couldn't find a tvshow.nfo file; will try to guess from filename...:")
+			regtv = re.compile('(.+?)'
+				'[ .]S(\d\d?)E(\d\d?)'
+				'.*?'
+				'(?:[ .](\d{3}\d?p)|\Z)?')
+			tv = regtv.match(filename)
+			if tv:
+				title = tv.group(1).replace(".", " ")
+			else:
+				title = "Unknown"
+			self.DLog("Using tvshow.title = " + title)
 		else:
 			nfoFile = nfoName
 			Log("Found nfo file at " + nfoFile)
@@ -169,11 +178,15 @@ class xbmcnfotv(Agent.TV_Shows):
 		duration_key = 'duration_'+id
 		Dict[duration_key] = [0] * 200
 		Log('Update called for TV Show with id = ' + id)
-		try: path1 = os.path.dirname(media.items[0].parts[0].file)
+		try:
+			filename=os.path.basename(media.items[0].parts[0].file)
+			path1 = os.path.dirname(media.items[0].parts[0].file)
 		except:
 			pageUrl = "http://localhost:32400/library/metadata/" + id + "/tree"
 			nfoXML = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
+			filename = os.path.basename(String.Unquote(nfoXML.get('file')))
 			path1 = os.path.dirname(String.Unquote(nfoXML.get('file')))
+
 		path = os.path.dirname(path1)
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		
@@ -245,9 +258,18 @@ class xbmcnfotv(Agent.TV_Shows):
 			Log('Found theme music ' + themeFilename)
 
 		if not os.path.exists(nfoName):
-			self.DLog("Couldn't find a tvshow.nfo file; will use the folder name as the TV show title:")
-			metadata.title = os.path.basename(os.path.normpath(os.path.dirname(nfoName)))
-			self.DLog("Using tvshow.title = " + metadata.title)
+			self.DLog("Couldn't find a tvshow.nfo file; will try to guess from filename...:")
+			regtv = re.compile('(.+?)'
+				'[ .]S(\d\d?)E(\d\d?)'
+				'.*?'
+				'(?:[ .](\d{3}\d?p)|\Z)?')
+			tv = regtv.match(filename)
+			if tv:
+				title = tv.group(1).replace(".", " ")
+				metadata.title = title
+			else:
+				title = "Unknown"
+			Log("Using tvshow.title = " + title)
 		else:
 			nfoFile = nfoName
 			nfoText = Core.storage.load(nfoFile)
@@ -627,20 +649,23 @@ class xbmcnfotv(Agent.TV_Shows):
 													elif "(Guest Star)" in credit_string:
 														#self.DLog ("Credit (Guest Star): " + credit_string)
 														episode.guest_stars.add(credit_string.replace(" (Guest Star)",""))
-														#self.DLog ("Credit (Writer): " + credit_string)
 													else:
+														#self.DLog ("Credit (Writer): " + credit_string)
 														episode.writers.add(credit_string.replace(" (Writer)",""))
-											episode.producers.discard('')
-											episode.writers.discard('')
-											episode.guest_stars.discard('')
-										except: pass
+										except:
+											self.DLog("Exception parsing Credits: " + traceback.format_exc())
+											pass
 										# Ep. Directors
 										try: 
 											directors = nfoXML.xpath('director')
 											episode.directors.clear()
-											[episode.directors.add(d.strip()) for directorXML in directors for d in directorXML.text.split("/")]
-											episode.directors.discard('')
-										except: pass
+											for directorXML in directors:
+												for d in directorXML.text.split("/"):
+													#self.DLog ("Director: " + d.strip())
+													episode.directors.add(d.strip())
+										except:
+											self.DLog("Exception parsing Director: " + traceback.format_exc())
+											pass
 										# Ep. Duration
 										try:
 											self.DLog ("Trying to read <durationinseconds> tag from episodes .nfo file...")
