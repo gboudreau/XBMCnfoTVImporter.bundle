@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	version = '1.1-6-gccaca2f-133'
+	ver = '1.1-8-g2af0a54-135'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -86,7 +86,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("++++++++++++++++++++++++")
 		self.DLog("Entering search function")
 		self.DLog("++++++++++++++++++++++++")
-		Log ("" + self.name + " Version: " + self.version)
+		Log ("" + self.name + " Version: " + self.ver)
 
 		parse_date = lambda s: Datetime.ParseDate(s).date()
 		self.DLog(media.primary_metadata)
@@ -170,7 +170,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("++++++++++++++++++++++++")
 		self.DLog("Entering update function")
 		self.DLog("++++++++++++++++++++++++")
-		Log ("" + self.name + " Version: " + self.version)
+		Log ("" + self.name + " Version: " + self.ver)
 
 		Dict.Reset()
 		metadata.duration = None
