@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-8-g2af0a54-135'
+	ver = '1.1-9-gfed3895-136'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -182,7 +182,7 @@ class xbmcnfotv(Agent.TV_Shows):
 			filename=os.path.basename(media.items[0].parts[0].file)
 			path1 = os.path.dirname(media.items[0].parts[0].file)
 		except:
-			pageUrl = "http://localhost:32400/library/metadata/" + id + "/tree"
+			pageUrl = "http://127.0.0.1:32400/library/metadata/" + id + "/tree"
 			nfoXML = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
 			filename = os.path.basename(String.Unquote(nfoXML.get('file')))
 			path1 = os.path.dirname(String.Unquote(nfoXML.get('file')))
@@ -457,7 +457,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		@parallelize
 		def UpdateEpisodes():
 			self.DLog("UpdateEpisodes called")
-			pageUrl = "http://localhost:32400/library/metadata/" + media.id + "/children"
+			pageUrl = "http://127.0.0.1:32400/library/metadata/" + media.id + "/children"
 			seasonList = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Directory')
 
 			seasons = []
@@ -471,7 +471,7 @@ class xbmcnfotv(Agent.TV_Shows):
 				if seasonID.count('allLeaves') == 0:
 					self.DLog("Finding episodes")
 
-					pageUrl = "http://localhost:32400" + seasonID
+					pageUrl = "http://127.0.0.1:32400" + seasonID
 
 					episodes = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Video')
 					self.DLog("Found " + str(len(episodes)) + " episodes.")
@@ -528,7 +528,7 @@ class xbmcnfotv(Agent.TV_Shows):
 						def UpdateEpisode(episode=episode, season_num=season_num, ep_num=ep_num, ep_key=ep_key, path=path1):
 							self.DLog("UpdateEpisode called for episode S" + str(season_num.zfill(2)) + "E" + str(ep_num.zfill(2)))
 							if(ep_num.count('allLeaves') == 0):
-								pageUrl = "http://localhost:32400" + ep_key + "/tree"
+								pageUrl = "http://127.0.0.1:32400" + ep_key + "/tree"
 								path1 = XML.ElementFromURL(pageUrl).xpath('//MediaPart')[0].get('file')
 								self.DLog('UPDATE: ' + path1)
 								filepath = path1.split
