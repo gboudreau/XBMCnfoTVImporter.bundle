@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-10-geabf9ea-137'
+	ver = '1.1-12-g169dd97-139'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -515,10 +515,15 @@ class xbmcnfotv(Agent.TV_Shows):
 						Log('Found season poster image at ' + seasonPosterFilename)
 
 					episodeXML = []
+					epnumber = 0
 					for episodeXML in episodes:
-						ep_num = episodeXML.get('index')
 						ep_key = episodeXML.get('key')
-						self.DLog("Found episode with key: " + ep_key)
+						self.DLog("epKEY: " + ep_key)
+						epnumber = epnumber + 1
+						ep_num = episodeXML.get('index')
+						if (ep_num == None):
+							ep_num = str(epnumber)
+						self.DLog("epNUM: " + ep_num)
 	
 						# Get the episode object from the model
 						episode = metadata.seasons[season_num].episodes[ep_num]
