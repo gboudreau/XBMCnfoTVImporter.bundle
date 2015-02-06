@@ -11,7 +11,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-12-g169dd97-139'
+	ver = '1.1-16-g7d7a6b9-143'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -522,6 +522,7 @@ class xbmcnfotv(Agent.TV_Shows):
 						epnumber = epnumber + 1
 						ep_num = episodeXML.get('index')
 						if (ep_num == None):
+							self.DLog("epNUM: Error!")
 							ep_num = str(epnumber)
 						self.DLog("epNUM: " + ep_num)
 	
@@ -531,7 +532,7 @@ class xbmcnfotv(Agent.TV_Shows):
 						# Grabs the episode information
 						@task
 						def UpdateEpisode(episode=episode, season_num=season_num, ep_num=ep_num, ep_key=ep_key, path=path1):
-							self.DLog("UpdateEpisode called for episode S" + str(season_num.zfill(2)) + "E" + str(ep_num.zfill(2)))
+							self.DLog("UpdateEpisode called for episode (" + str(episode)+ ", " + str(ep_key) + ") S" + str(season_num.zfill(2)) + "E" + str(ep_num.zfill(2)))
 							if(ep_num.count('allLeaves') == 0):
 								pageUrl = "http://127.0.0.1:32400" + ep_key + "/tree"
 								path1 = XML.ElementFromURL(pageUrl).xpath('//MediaPart')[0].get('file')
@@ -552,25 +553,38 @@ class xbmcnfotv(Agent.TV_Shows):
 									nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
 									nfoTextLower = nfoText.lower()
 									if nfoTextLower.count('<episodedetails') > 0 and nfoTextLower.count('</episodedetails>') > 0:
-										nfoepc = nfoTextLower.count('<episodedetails')
-										self.DLog("EPCount in nfo file: " + str(nfoepc))
-										nfopos = int(ep_num)
-										self.DLog("EPNum: " + str(nfopos))
-										while nfopos > nfoepc: nfopos = nfopos - nfoepc
-										self.DLog("EPNFOPos: " + str(nfopos))
-										# Remove URLs (or other stuff) at the end of the XML file
-										nfoText = '%s</episodedetails>' % nfoText.split('</episodedetails>')[nfopos-1]
-
 										self.DLog("Looks like an XBMC NFO file (has <episodedetails>)")
-										#likely an xbmc nfo file
-										try: nfoXML = XML.ElementFromString(nfoText).xpath('//episodedetails')[0]
-										except:
-											self.DLog('ERROR: Cant parse XML in file: ' + nfoFile)
-											return
+										nfoepc = int(nfoTextLower.count('<episodedetails'))
+										nfopos = 1
+										while nfopos <= nfoepc:
+											self.DLog("EpNum: " + str(ep_num) + " NFOEpCount:" + str(nfoepc) +" Current EpNFOPos: " + str(nfopos))
+											# Remove URLs (or other stuff) at the end of the XML file
+											nfoTextTemp = '%s</episodedetails>' % nfoText.split('</episodedetails>')[nfopos-1]
 
-										#remove empty xml tags
-										self.DLog('Removing empty XML Tags from episode nfo...')
-										nfoXML = self.RemoveEmptyTags(nfoXML)
+											# likely an xbmc nfo file
+											try: nfoXML = XML.ElementFromString(nfoTextTemp).xpath('//episodedetails')[0]
+											except:
+												self.DLog('ERROR: Cant parse XML in file: ' + nfoFile)
+												return
+
+											# remove empty xml tags
+											self.DLog('Removing empty XML Tags from episode nfo...')
+											nfoXML = self.RemoveEmptyTags(nfoXML)
+
+											# check ep number
+											try:
+												nfo_ep_num = nfoXML.xpath('episode')[0].text
+												self.DLog('EpNum from NFO: ' + str(nfo_ep_num))
+											except: pass
+											if int(nfo_ep_num) == int(ep_num):
+												nfoText = nfoTextTemp
+												break
+
+											nfopos = nfopos + 1
+
+										if nfopos > nfoepc:
+											self.DLog('No matching episode in nfo file!')
+											return
 
 										# Ep. Title
 										try: episode.title = nfoXML.xpath('title')[0].text
