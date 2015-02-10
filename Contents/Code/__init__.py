@@ -9,9 +9,13 @@
 #
 import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
+PERCENT_RATINGS = {
+  'rottentomatoes','rotten tomatoes','rt'
+}
+
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-16-g7d7a6b9-143'
+	ver = '1.1-18-geb14161-145'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -130,14 +134,14 @@ class xbmcnfotv(Agent.TV_Shows):
 			if nfoTextLower.count('<tvshow') > 0 and nfoTextLower.count('</tvshow>') > 0:
 				# Remove URLs (or other stuff) at the end of the XML file
 				nfoText = '%s</tvshow>' % nfoText.split('</tvshow>')[0]
-				
+
 				#likely an xbmc nfo file
 				try: nfoXML = XML.ElementFromString(nfoText).xpath('//tvshow')[0]
 				except:
 					self.DLog('ERROR: Cant parse XML in ' + nfoFile + '. Aborting!')
 					return
 				Log(nfoXML.xpath("title"))
-				
+
 				# Title
 				try: title = nfoXML.xpath("title")[0].text
 				except:
@@ -157,7 +161,7 @@ class xbmcnfotv(Agent.TV_Shows):
 			ord3 = lambda x : '%.3d' % ord(x)
 			id = int(''.join(map(ord3, title)))
 			id = str(abs(hash(int(id))))
-			
+
 			Log('ID: ' + str(id))
 			Log('Title: ' + str(title))
 			Log('Year: ' + str(year))
@@ -189,7 +193,7 @@ class xbmcnfotv(Agent.TV_Shows):
 
 		path = os.path.dirname(path1)
 		parse_date = lambda s: Datetime.ParseDate(s).date()
-		
+
 		nfoName = os.path.join(path, "tvshow.nfo")
 		self.DLog('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
@@ -359,19 +363,45 @@ class xbmcnfotv(Agent.TV_Shows):
 				# Summary (Plot)
 				try: metadata.summary = nfoXML.xpath("plot")[0].text
 				except: pass
-				# Rating
+				# Ratings
 				try:
 					nforating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
 					if Prefs['fround']:
 						rating = self.FloatRound(nforating)
 					else:
 						rating = nforating
+					if Prefs['altratings']:
+						self.DLog("Searching for additional Ratings...")
+						allowedratings = Prefs['ratings']
+						if not allowedratings: allowedratings = ""
+						addratingsstring = ""
+						addratings = nfoXML.xpath('ratings')
+						if addratings:
+							for addratingXML in addratings:
+								for addrating in addratingXML:
+									ratingprovider = str(addrating.attrib['moviedb'])
+									ratingvalue = str(addrating.text.replace (',','.'))
+									if ratingprovider.lower() in PERCENT_RATINGS:
+										ratingvalue = ratingvalue + "%"
+									if ratingprovider in allowedratings or allowedratings == "":
+										self.DLog("adding rating: " + ratingprovider + ": " + ratingvalue)
+										addratingsstring = addratingsstring + " | " + ratingprovider + ": " + ratingvalue
+							self.DLog("Putting additional ratings at the " + Prefs['ratingspos'] + " of the summary!")
+							if Prefs['ratingspos'] == "front":
+								if Prefs['preserverating']:
+									metadata.summary = addratingsstring[3:] + self.unescape(" &#9733;\n\n") + metadata.summary
+								else:
+									metadata.summary = self.unescape("&#9733; ") + addratingsstring[3:] + self.unescape(" &#9733;\n\n") + metadata.summary
+							else:
+								metadata.summary = metadata.summary + self.unescape("\n\n&#9733; ") + addratingsstring[3:] + self.unescape(" &#9733;")
 					if Prefs['preserverating']:
+						self.DLog("Putting .nfo rating in front of summary!")
 						metadata.summary = self.unescape(str(Prefs['beforerating'])) + "{:.1f}".format(nforating) + self.unescape(str(Prefs['afterrating'])) + metadata.summary
 						metadata.rating = rating
 					else:
 						metadata.rating = rating
 				except:
+					self.DLog("Exception parsing ratings: " + traceback.format_exc())
 					pass
 				# Genres
 				try:
@@ -416,8 +446,8 @@ class xbmcnfotv(Agent.TV_Shows):
 					# if role.photo and role.photo != 'None' and role.photo != '':
 						# data = HTTP.Request(actor.xpath("thumb")[0].text)
 						# Log('Added Thumbnail for: ' + role.actor)
-				
-				
+
+
 				Log("---------------------")
 				Log("Series nfo Information")
 				Log("---------------------")
@@ -452,7 +482,7 @@ class xbmcnfotv(Agent.TV_Shows):
 				except: [Log("\t" + actor.actor) for actor in metadata.roles]
 				except: Log("\t-")
 				Log("---------------------")
-				
+
 		# Grabs the season data
 		@parallelize
 		def UpdateEpisodes():
@@ -466,7 +496,7 @@ class xbmcnfotv(Agent.TV_Shows):
 				except: pass
 				try: season_num = seasons.get('index')
 				except: pass
-				
+
 				self.DLog("seasonID : " + path)
 				if seasonID.count('allLeaves') == 0:
 					self.DLog("Finding episodes")
@@ -475,7 +505,7 @@ class xbmcnfotv(Agent.TV_Shows):
 
 					episodes = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/Video')
 					self.DLog("Found " + str(len(episodes)) + " episodes.")
-					
+
 					firstEpisodePath = XML.ElementFromURL(pageUrl).xpath('//Part')[0].get('file')
 					seasonPath = os.path.dirname(firstEpisodePath)
 
@@ -525,7 +555,7 @@ class xbmcnfotv(Agent.TV_Shows):
 							self.DLog("epNUM: Error!")
 							ep_num = str(epnumber)
 						self.DLog("epNUM: " + ep_num)
-	
+
 						# Get the episode object from the model
 						episode = metadata.seasons[season_num].episodes[ep_num]
 
@@ -638,20 +668,46 @@ class xbmcnfotv(Agent.TV_Shows):
 										# Ep. Summary
 										try: episode.summary = nfoXML.xpath('plot')[0].text
 										except: pass
-										# Ep. Rating
+										# Ep. Ratings
 										try:
 											epnforating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
 											if Prefs['fround']:
 												eprating = self.FloatRound(epnforating)
 											else:
 												eprating = epnforating
+											if Prefs['altratings']:
+												self.DLog("Searching for additional episode ratings...")
+												allowedratings = Prefs['ratings']
+											if not allowedratings: allowedratings = ""
+											addepratingsstring = ""
+											addepratings = nfoXML.xpath('ratings')
+											if addepratings:
+												for addepratingXML in addepratings:
+													for addeprating in addepratingXML:
+														epratingprovider = str(addeprating.attrib['moviedb'])
+														epratingvalue = str(addeprating.text.replace (',','.'))
+														if epratingprovider.lower() in PERCENT_RATINGS:
+															epratingvalue = epratingvalue + "%"
+														if epratingprovider in allowedratings or allowedratings == "":
+															self.DLog("adding episode rating: " + epratingprovider + ": " + epratingvalue)
+															addepratingsstring = addepratingsstring + " | " + epratingprovider + ": " + epratingvalue
+												self.DLog("Putting additional episode ratings at the " + Prefs['ratingspos'] + " of the summary!")
+												if Prefs['ratingspos'] == "front":
+													if Prefs['preserveratingep']:
+														episode.summary = addepratingsstring[3:] + self.unescape(" &#9733;\n\n") + episode.summary
+													else:
+														episode.summary = self.unescape("&#9733; ") + addepratingsstring[3:] + self.unescape(" &#9733;\n\n") + episode.summary
+												else:
+													episode.summary = episode.summary + self.unescape("\n\n&#9733; ") + addepratingsstring[3:] + self.unescape(" &#9733;")
 											if Prefs['preserveratingep']:
 												self.DLog("Putting Ep .nfo rating in front of summary!")
 												episode.summary = self.unescape(str(Prefs['beforeratingep'])) + "{:.1f}".format(epnforating) + self.unescape(str(Prefs['afterratingep'])) + episode.summary
 												episode.rating = eprating
 											else:
 												episode.rating = eprating
-										except: pass
+										except:
+											self.DLog("Exception parsing episode ratings: " + traceback.format_exc())
+											pass
 										# Ep. Producers / Writers / Guest Stars(Credits)
 										try:
 											credit_string = None
@@ -675,7 +731,7 @@ class xbmcnfotv(Agent.TV_Shows):
 											self.DLog("Exception parsing Credits: " + traceback.format_exc())
 											pass
 										# Ep. Directors
-										try: 
+										try:
 											directors = nfoXML.xpath('director')
 											episode.directors.clear()
 											for directorXML in directors:
