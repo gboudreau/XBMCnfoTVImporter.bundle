@@ -10,12 +10,12 @@
 import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 
 PERCENT_RATINGS = {
-  'rottentomatoes','rotten tomatoes','rt'
+  'rottentomatoes','rotten tomatoes','rt','flixster'
 }
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-18-geb14161-145'
+	ver = '1.1-19-g0796358-146'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
