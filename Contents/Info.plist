@@ -13,7 +13,7 @@
 	<key>PlexAgentAttributionText</key>
 	<string>
 <![CDATA[
-XBMCnfoTVImporter (V 1.1-19)
+XBMCnfoTVImporter (V 1.1-22)
 <br /><br />
 is an agent to import the local metadata XBMC creates when you export your library
 to seperate files. Series and season poster, fanart and thumbs will be recognized,
