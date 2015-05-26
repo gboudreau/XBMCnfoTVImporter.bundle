@@ -15,7 +15,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-23-g32094fd-150'
+	ver = '1.1-24-g8b82573-151'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic']
@@ -110,7 +110,11 @@ class xbmcnfotv(Agent.TV_Shows):
 
 		id = media.id
 		year = 0
-		title = None
+		if media.title:
+			title = media.title
+		else:
+			title = "Unknown"
+
 
 		if not os.path.exists(nfoName):
 			self.DLog("Couldn't find a tvshow.nfo file; will try to guess from filename...:")
@@ -121,8 +125,6 @@ class xbmcnfotv(Agent.TV_Shows):
 			tv = regtv.match(filename)
 			if tv:
 				title = tv.group(1).replace(".", " ")
-			else:
-				title = "Unknown"
 			self.DLog("Using tvshow.title = " + title)
 		else:
 			nfoFile = nfoName
@@ -130,6 +132,10 @@ class xbmcnfotv(Agent.TV_Shows):
 			nfoText = Core.storage.load(nfoFile)
 			# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
 			nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
+			# remove empty xml tags from nfo
+			self.DLog('Removing empty XML tags from tvshows nfo...')
+			nfoText = re.sub(r'^\s*<.*/>[\r\n]+', '', nfoText, flags = re.MULTILINE)
+
 			nfoTextLower = nfoText.lower()
 			if nfoTextLower.count('<tvshow') > 0 and nfoTextLower.count('</tvshow>') > 0:
 				# Remove URLs (or other stuff) at the end of the XML file
@@ -261,6 +267,11 @@ class xbmcnfotv(Agent.TV_Shows):
 			metadata.themes['theme.mp3'] = Proxy.Media(themeData)
 			Log('Found theme music ' + themeFilename)
 
+		if media.title:
+			title = media.title
+		else:
+			title = "Unknown"
+
 		if not os.path.exists(nfoName):
 			self.DLog("Couldn't find a tvshow.nfo file; will try to guess from filename...:")
 			regtv = re.compile('(.+?)'
@@ -271,14 +282,15 @@ class xbmcnfotv(Agent.TV_Shows):
 			if tv:
 				title = tv.group(1).replace(".", " ")
 				metadata.title = title
-			else:
-				title = "Unknown"
 			Log("Using tvshow.title = " + title)
 		else:
 			nfoFile = nfoName
 			nfoText = Core.storage.load(nfoFile)
 			# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
 			nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
+			# remove empty xml tags from nfo
+			self.DLog('Removing empty XML tags from tvshows nfo...')
+			nfoText = re.sub(r'^\s*<.*/>[\r\n]+', '', nfoText, flags = re.MULTILINE)
 			nfoTextLower = nfoText.lower()
 			if nfoTextLower.count('<tvshow') > 0 and nfoTextLower.count('</tvshow>') > 0:
 				# Remove URLs (or other stuff) at the end of the XML file
@@ -290,8 +302,8 @@ class xbmcnfotv(Agent.TV_Shows):
 					self.DLog('ERROR: Cant parse XML in ' + nfoFile + '. Aborting!')
 					return
 
-				#remove empty xml tags
-				self.DLog('Removing empty XML tags from tvshows nfo...')
+				#remove remaining empty xml tags
+				self.DLog('Removing remaining empty XML tags from tvshows nfo...')
 				nfoXML = self.RemoveEmptyTags(nfoXML)
 
 				# Title
@@ -581,6 +593,9 @@ class xbmcnfotv(Agent.TV_Shows):
 									nfoText = nfoText.replace ('</multiepisodenfo>','')
 									# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
 									nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
+									# remove empty xml tags from nfo
+									self.DLog('Removing empty XML tags from tvshows nfo...')
+									nfoText = re.sub(r'^\s*<.*/>[\r\n]+', '', nfoText, flags = re.MULTILINE)
 									nfoTextLower = nfoText.lower()
 									if nfoTextLower.count('<episodedetails') > 0 and nfoTextLower.count('</episodedetails>') > 0:
 										self.DLog("Looks like an XBMC NFO file (has <episodedetails>)")
@@ -597,11 +612,12 @@ class xbmcnfotv(Agent.TV_Shows):
 												self.DLog('ERROR: Cant parse XML in file: ' + nfoFile)
 												return
 
-											# remove empty xml tags
-											self.DLog('Removing empty XML Tags from episode nfo...')
+											# remove remaining empty xml tags
+											self.DLog('Removing remaining empty XML Tags from episode nfo...')
 											nfoXML = self.RemoveEmptyTags(nfoXML)
 
 											# check ep number
+											nfo_ep_num = 0
 											try:
 												nfo_ep_num = nfoXML.xpath('episode')[0].text
 												self.DLog('EpNum from NFO: ' + str(nfo_ep_num))
