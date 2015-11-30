@@ -15,7 +15,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-29-ge2b9185-156'
+	ver = '1.1-30-g5f4fff0-157'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -374,10 +374,12 @@ class xbmcnfotv(Agent.TV_Shows):
 				except: pass
 				# Summary (Plot)
 				try: metadata.summary = nfoXML.xpath("plot")[0].text
-				except: pass
+				except:
+					metadata.summary = ""
+					pass
 				# Ratings
 				try:
-					nforating = float(nfoXML.xpath("rating")[0].text.replace(',', '.'))
+					nforating = round(float(nfoXML.xpath("rating")[0].text.replace(',', '.')),1)
 					if Prefs['fround']:
 						rating = self.FloatRound(nforating)
 					else:
