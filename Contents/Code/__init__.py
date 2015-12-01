@@ -15,7 +15,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-30-g5f4fff0-157'
+	ver = '1.1-31-g839aef3-158'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -153,6 +153,11 @@ class xbmcnfotv(Agent.TV_Shows):
 				except:
 					self.DLog("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
 					return
+				# Sort Title
+				try: media.title_sort = nfoXML.xpath("sorttitle")[0].text
+				except:
+					self.DLog("No <sorttitle> tag in " + nfoFile + ".")
+					pass
 				# Year
 				try: year = parse_date(nfoXML.xpath("premiered")[0].text).year
 				except: pass
@@ -311,6 +316,11 @@ class xbmcnfotv(Agent.TV_Shows):
 				except:
 					self.DLog("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
 					return
+				# Sort Title
+				try: metadata.title_sort = nfoXML.xpath("sorttitle")[0].text
+				except:
+					self.DLog("No <sorttitle> tag in " + nfoFile + ".")
+					pass
 				# Original Title
 				try: metadata.original_title = nfoXML.xpath('originaltitle')[0].text
 				except: pass
@@ -469,6 +479,8 @@ class xbmcnfotv(Agent.TV_Shows):
 				except: Log("ID: -")
 				try: Log("Title: " + str(metadata.title))
 				except: Log("Title: -")
+				try: Log("Sort Title: " + str(metadata.title_sort))
+				except: Log("Sort Title: -")
 				try: Log("Original: " + str(metadata.original_title))
 				except: Log("Original: -")
 				try: Log("Rating: " + str(metadata.rating))
