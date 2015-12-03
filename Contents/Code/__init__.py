@@ -15,7 +15,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-31-g839aef3-158'
+	ver = '1.1-32-g8088669-159'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -390,42 +390,10 @@ class xbmcnfotv(Agent.TV_Shows):
 				# Ratings
 				try:
 					nforating = round(float(nfoXML.xpath("rating")[0].text.replace(',', '.')),1)
-					if Prefs['fround']:
-						rating = self.FloatRound(nforating)
-					else:
-						rating = nforating
-					if Prefs['altratings']:
-						self.DLog("Searching for additional Ratings...")
-						allowedratings = Prefs['ratings']
-						if not allowedratings: allowedratings = ""
-						addratingsstring = ""
-						addratings = nfoXML.xpath('ratings')
-						if addratings:
-							for addratingXML in addratings:
-								for addrating in addratingXML:
-									ratingprovider = str(addrating.attrib['moviedb'])
-									ratingvalue = str(addrating.text.replace (',','.'))
-									if ratingprovider.lower() in PERCENT_RATINGS:
-										ratingvalue = ratingvalue + "%"
-									if ratingprovider in allowedratings or allowedratings == "":
-										self.DLog("adding rating: " + ratingprovider + ": " + ratingvalue)
-										addratingsstring = addratingsstring + " | " + ratingprovider + ": " + ratingvalue
-							self.DLog("Putting additional ratings at the " + Prefs['ratingspos'] + " of the summary!")
-							if Prefs['ratingspos'] == "front":
-								if Prefs['preserverating']:
-									metadata.summary = addratingsstring[3:] + self.unescape(" &#9733;\n\n") + metadata.summary
-								else:
-									metadata.summary = self.unescape("&#9733; ") + addratingsstring[3:] + self.unescape(" &#9733;\n\n") + metadata.summary
-							else:
-								metadata.summary = metadata.summary + self.unescape("\n\n&#9733; ") + addratingsstring[3:] + self.unescape(" &#9733;")
-					if Prefs['preserverating']:
-						self.DLog("Putting .nfo rating in front of summary!")
-						metadata.summary = self.unescape(str(Prefs['beforerating'])) + "{:.1f}".format(nforating) + self.unescape(str(Prefs['afterrating'])) + metadata.summary
-						metadata.rating = rating
-					else:
-						metadata.rating = rating
+					metadata.rating = nforating
+					self.DLog("Series Rating found: " + str(nforating))
 				except:
-					self.DLog("Exception parsing ratings: " + traceback.format_exc())
+					self.DLog("Can't read rating from tvshow.nfo.")
 					pass
 				# Genres
 				try:
@@ -703,42 +671,10 @@ class xbmcnfotv(Agent.TV_Shows):
 										# Ep. Ratings
 										try:
 											epnforating = round(float(nfoXML.xpath("rating")[0].text.replace(',', '.')),1)
-											if Prefs['fround']:
-												eprating = self.FloatRound(epnforating)
-											else:
-												eprating = epnforating
-											if Prefs['altratings']:
-												self.DLog("Searching for additional episode ratings...")
-												allowedratings = Prefs['ratings']
-											if not allowedratings: allowedratings = ""
-											addepratingsstring = ""
-											addepratings = nfoXML.xpath('ratings')
-											if addepratings:
-												for addepratingXML in addepratings:
-													for addeprating in addepratingXML:
-														epratingprovider = str(addeprating.attrib['moviedb'])
-														epratingvalue = str(addeprating.text.replace (',','.'))
-														if epratingprovider.lower() in PERCENT_RATINGS:
-															epratingvalue = epratingvalue + "%"
-														if epratingprovider in allowedratings or allowedratings == "":
-															self.DLog("adding episode rating: " + epratingprovider + ": " + epratingvalue)
-															addepratingsstring = addepratingsstring + " | " + epratingprovider + ": " + epratingvalue
-												self.DLog("Putting additional episode ratings at the " + Prefs['ratingspos'] + " of the summary!")
-												if Prefs['ratingspos'] == "front":
-													if Prefs['preserveratingep']:
-														episode.summary = addepratingsstring[3:] + self.unescape(" &#9733;\n\n") + episode.summary
-													else:
-														episode.summary = self.unescape("&#9733; ") + addepratingsstring[3:] + self.unescape(" &#9733;\n\n") + episode.summary
-												else:
-													episode.summary = episode.summary + self.unescape("\n\n&#9733; ") + addepratingsstring[3:] + self.unescape(" &#9733;")
-											if Prefs['preserveratingep']:
-												self.DLog("Putting Ep .nfo rating in front of summary!")
-												episode.summary = self.unescape(str(Prefs['beforeratingep'])) + "{:.1f}".format(epnforating) + self.unescape(str(Prefs['afterratingep'])) + episode.summary
-												episode.rating = eprating
-											else:
-												episode.rating = eprating
+											episode.rating = epnforating
+											self.DLog("Episode Rating found: " + str(epnforating))
 										except:
-											self.DLog("Exception parsing episode ratings: " + traceback.format_exc())
+											self.DLog("Cant read rating from episode nfo.")
 											pass
 										# Ep. Producers / Writers / Guest Stars(Credits)
 										try:
@@ -750,15 +686,20 @@ class xbmcnfotv(Agent.TV_Shows):
 											for creditXML in credits:
 												for credit in creditXML.text.split("/"):
 													credit_string = credit.strip()
-													if "(Producer)" in credit_string:
-														#self.DLog ("Credit (Producer): " + credit_string)
+													self.DLog ("Credit String: " + credit_string)
+													if " (Producer)" in credit_string:
+														self.DLog ("Credit (Producer): " + credit_string)
 														episode.producers.add(credit_string.replace(" (Producer)",""))
-													elif "(Guest Star)" in credit_string:
-														#self.DLog ("Credit (Guest Star): " + credit_string)
-														episode.guest_stars.add(credit_string.replace(" (Guest Star)",""))
-													else:
-														#self.DLog ("Credit (Writer): " + credit_string)
-														episode.writers.add(credit_string.replace(" (Writer)",""))
+														continue
+													if " (Guest Star)" in credit_string:
+														self.DLog ("Credit (Guest Star): " + credit_string)
+														credit_string.replace(" (Guest Star)","")
+														episode.guest_stars.add(credit_string)
+														continue
+													if " (Writer)" in credit_string:
+														self.DLog ("Credit (Writer): " + credit_string)
+														credit_string.replace(" (Writer)","")
+														episode.writers.add(credit_string)
 										except:
 											self.DLog("Exception parsing Credits: " + traceback.format_exc())
 											pass
