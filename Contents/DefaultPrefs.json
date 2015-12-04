@@ -6,12 +6,6 @@
     "default":"false"
   },
   {
-    "id":"fround",
-    "label":"enable rounding of floating point ratings\n__________________________________________________________________________________________",
-    "type":"bool",
-    "default":"false"
-  },
-  {
     "id":"beforerating",
     "label":"text before rating (supports html specialchars!):",
     "type":"text",
