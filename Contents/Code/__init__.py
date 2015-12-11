@@ -8,6 +8,7 @@
 # Logo by CrazyRabbit
 #
 import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
+from dateutil.parser import parse
 
 PERCENT_RATINGS = {
   'rottentomatoes','rotten tomatoes','rt','flixster'
@@ -15,7 +16,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-33-gaf43427-160'
+	ver = '1.1-34-gcfc676f-161'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -89,7 +90,6 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("++++++++++++++++++++++++")
 		Log ("" + self.name + " Version: " + self.ver)
 
-		parse_date = lambda s: Datetime.ParseDate(s).date()
 		self.DLog(media.primary_metadata)
 		filename = os.path.basename(String.Unquote(media.filename).encode('utf-8'))
 		path1 = os.path.dirname(String.Unquote(media.filename).encode('utf-8'))
@@ -156,7 +156,9 @@ class xbmcnfotv(Agent.TV_Shows):
 					self.DLog("No <sorttitle> tag in " + nfoFile + ".")
 					pass
 				# Year
-				try: year = parse_date(nfoXML.xpath("premiered")[0].text).year
+				try:
+					dt = parse(nfoXML.xpath("premiered")[0].text)
+					year = dt.strftime ('%Y')
 				except: pass
 				# ID
 				try: id = nfoXML.xpath("id")[0].text
@@ -200,7 +202,6 @@ class xbmcnfotv(Agent.TV_Shows):
 			path1 = os.path.dirname(String.Unquote(nfoXML.get('file')))
 
 		path = os.path.dirname(path1)
-		parse_date = lambda s: Datetime.ParseDate(s).date()
 
 		nfoName = os.path.join(path, "tvshow.nfo")
 		self.DLog('Looking for TV Show NFO file at ' + nfoName)
@@ -361,18 +362,13 @@ class xbmcnfotv(Agent.TV_Shows):
 							self.DLog("No dateadded tag found...")
 							pass
 					if air_string:
-						if not Prefs['correctdate']:
-							metadata.originally_available_at = parse_date(air_string)
-						else:
-							self.DLog("Apply date correction: " + Prefs['datestring'])
-							if '*' in Prefs['datestring']:
-								for char in ['/','-','.']:
-									try:
-										metadata.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring'].replace('*', char)))).date()
-										self.DLog("Match found: " + Prefs['datestring'].replace('*', char))
-									except: pass
-							else:
-								metadata.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring']))).date()
+						try:
+							dt = parse(air_string)
+							metadata.originally_available_at = dt
+							self.DLog("Set premiere to: " + dt.strftime('%Y-%m-%d'))
+						except:
+							self.DLog("Couldn't parse premiere: " + air_string)
+							pass
 				except:
 					self.DLog("Exception parsing Premiere: " + traceback.format_exc())
 					pass
@@ -681,18 +677,13 @@ class xbmcnfotv(Agent.TV_Shows):
 													self.DLog("No dateadded tag found...")
 													pass
 											if air_string:
-												if not Prefs['correctdate']:
-													episode.originally_available_at = parse_date(air_string)
-												else:
-													self.DLog("Apply date correction: " + Prefs['datestring'])
-													if '*' in Prefs['datestring']:
-														for char in ['/','-','.']:
-															try:
-																episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring'].replace('*', char)))).date()
-																self.DLog("Match found: " + Prefs['datestring'].replace('*', char))
-															except: pass
-													else:
-														episode.originally_available_at = datetime.datetime.fromtimestamp(time.mktime(time.strptime(air_string, Prefs['datestring']))).date()
+												try:
+													dt = parse(air_string)
+													episode.originally_available_at = dt
+													self.DLog("Set premiere to: " + dt.strftime('%Y-%m-%d'))
+												except:
+													self.DLog("Couldn't parse premiere: " + air_string)
+													pass
 										except:
 											self.DLog("Exception parsing Ep Premiere: " + traceback.format_exc())
 											pass
