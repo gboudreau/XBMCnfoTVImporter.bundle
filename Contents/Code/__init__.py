@@ -16,7 +16,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-35-g93dd5b8-162'
+	ver = '1.1-36-gd38fb59-163'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -155,11 +155,6 @@ class xbmcnfotv(Agent.TV_Shows):
 				except:
 					self.DLog("No <sorttitle> tag in " + nfoFile + ".")
 					pass
-				# Year
-				try:
-					year = int(nfoXML.xpath('year')[0].text.strip())
-					self.DLog ("Reading year tag: " + str(year))
-				except: pass
 				# ID
 				try: id = nfoXML.xpath("id")[0].text
 				except:
@@ -322,11 +317,6 @@ class xbmcnfotv(Agent.TV_Shows):
 				# Original Title
 				try: metadata.original_title = nfoXML.xpath('originaltitle')[0].text
 				except: pass
-				# Year
-				try:
-					metadata.year = int(nfoXML.xpath('year')[0].text.strip())
-					self.DLog ("Reading year tag: " + str(metadata.year))
-				except: pass
 				# Content Rating
 				try:
 					mpaa = nfoXML.xpath('./mpaa')[0].text
@@ -371,11 +361,8 @@ class xbmcnfotv(Agent.TV_Shows):
 							dt = parse(air_string)
 							metadata.originally_available_at = dt
 							self.DLog("Set premiere to: " + dt.strftime('%Y-%m-%d'))
-							if not metadata.year:
-								metadata.year = int(dt.strftime('%Y'))
-								self.DLog ("Set year tag from premiere: " + str(metadata.year))
 						except:
-							self.DLog("Couldn't parse premiere: " + air_string)
+							self.DLog("Couldn't parse premiere: " + traceback.format_exc())
 							pass
 				except:
 					self.DLog("Exception parsing Premiere: " + traceback.format_exc())
