@@ -16,7 +16,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-36-gd38fb59-163'
+	ver = '1.1-37-gff54fac-164'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -755,6 +755,9 @@ class xbmcnfotv(Agent.TV_Shows):
 														self.DLog ("Credit (Writer): " + credit_string)
 														credit_string.replace(" (Writer)","")
 														episode.writers.add(credit_string)
+														continue
+													self.DLog ("Unknown Credit (adding as Writer): " + credit_string)
+													episode.writers.add (credit_string)
 										except:
 											self.DLog("Exception parsing Credits: " + traceback.format_exc())
 											pass
@@ -763,9 +766,10 @@ class xbmcnfotv(Agent.TV_Shows):
 											directors = nfoXML.xpath('director')
 											episode.directors.clear()
 											for directorXML in directors:
-												for d in directorXML.text.split("/"):
-													#self.DLog ("Director: " + d.strip())
-													episode.directors.add(d.strip())
+												for director in directorXML.text.split("/"):
+													director_string = director.strip()
+													self.DLog ("Director: " + director)
+													episode.directors.add(director)
 										except:
 											self.DLog("Exception parsing Director: " + traceback.format_exc())
 											pass
