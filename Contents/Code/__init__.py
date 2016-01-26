@@ -16,7 +16,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-37-gff54fac-164'
+	ver = '1.1-38-g156ce9f-165'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -358,7 +358,10 @@ class xbmcnfotv(Agent.TV_Shows):
 							pass
 					if air_string:
 						try:
-							dt = parse(air_string)
+							if Prefs['dayfirst']:
+								dt = parse(air_string, dayfirst=True)
+							else:
+								dt = parse(air_string)
 							metadata.originally_available_at = dt
 							self.DLog("Set premiere to: " + dt.strftime('%Y-%m-%d'))
 						except:
@@ -673,7 +676,10 @@ class xbmcnfotv(Agent.TV_Shows):
 													pass
 											if air_string:
 												try:
-													dt = parse(air_string)
+													if Prefs['dayfirst']:
+														dt = parse(air_string, dayfirst=True)
+													else:
+														dt = parse(air_string)
 													episode.originally_available_at = dt
 													self.DLog("Set premiere to: " + dt.strftime('%Y-%m-%d'))
 												except:
