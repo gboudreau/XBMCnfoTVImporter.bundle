@@ -6,6 +6,12 @@
     "default":"false"
   },
   {
+    "id":"dayfirst",
+    "label":"enable day first in ambiguous dates",
+    "type":"bool",
+    "default":"false"
+  },
+  {
     "id":"beforerating",
     "label":"text before rating (supports html specialchars!):",
     "type":"text",
