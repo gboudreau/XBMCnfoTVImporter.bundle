@@ -644,10 +644,10 @@ class xbmcnfotv(Agent.TV_Shows):
 												try:
 													if nfopos == 1:
 														multEpTitlePlexPatch = nfoXML.xpath('title')[0].text
-														multEpSummaryPlexPatch = "(" + nfoXML.xpath('title')[0].text + ") " + nfoXML.xpath('plot')[0].text
+														multEpSummaryPlexPatch = "[Episode #" + str(nfo_ep_num) + " - " + nfoXML.xpath('title')[0].text + "] " + nfoXML.xpath('plot')[0].text
 													else:
 														multEpTitlePlexPatch = multEpTitlePlexPatch + " : " + nfoXML.xpath('title')[0].text
-														multEpSummaryPlexPatch = multEpSummaryPlexPatch + "\n" + "(" + nfoXML.xpath('title')[0].text + ") " + nfoXML.xpath('plot')[0].text
+														multEpSummaryPlexPatch = multEpSummaryPlexPatch + "\n" + "[Episode #" + str(nfo_ep_num) + " - " + nfoXML.xpath('title')[0].text + "] " + nfoXML.xpath('plot')[0].text
 												except: pass
 											
 											if not Prefs['multEpisodePlexPatch'] or (nfoepc == 1):
