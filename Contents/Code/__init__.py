@@ -635,7 +635,7 @@ class xbmcnfotv(Agent.TV_Shows):
 											except: pass
 											
 											# Checks to see if first episode in file for Plex MultiEpisode Patch
-											if (nfopos == 1) and (int(nfo_ep_num) == int(ep_num)):
+											if (nfopos == 1) and (int(nfo_ep_num) == int(ep_num)) and (nfoepc > 1):
 												multEpTestPlexPatch = 1
 											
 											# Creates combined strings for Plex MultiEpisode Patch
@@ -657,7 +657,7 @@ class xbmcnfotv(Agent.TV_Shows):
 											
 											nfopos = nfopos + 1
 
-										if nfopos > nfoepc:
+										if not multEpTestPlexPatch and not Prefs['multEpisodePlexPatch'] and (nfopos > nfoepc):
 											self.DLog('No matching episode in nfo file!')
 											return
 
