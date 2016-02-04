@@ -837,7 +837,7 @@ class xbmcnfotv(Agent.TV_Shows):
 										episodeThumbNames = []
 
 										#Multiepisode nfo thumbs
-										if nfoepc > 1:
+										if (nfoepc > 1) and not Prefs['multEpisodePlexPatch']:
 											for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.*'):
 												if "-E" in name: continue
 												episodeThumbNames.append (os.path.join(os.path.dirname(nfoFile), name))
