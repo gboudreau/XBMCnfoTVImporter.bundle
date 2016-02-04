@@ -610,6 +610,7 @@ class xbmcnfotv(Agent.TV_Shows):
 										self.DLog("Looks like an XBMC NFO file (has <episodedetails>)")
 										nfoepc = int(nfoTextLower.count('<episodedetails'))
 										nfopos = 1
+										multEpTitlePlexPatch = multEpSummaryPlexPatch = ""
 										while nfopos <= nfoepc:
 											self.DLog("EpNum: " + str(ep_num) + " NFOEpCount:" + str(nfoepc) +" Current EpNFOPos: " + str(nfopos))
 											# Remove URLs (or other stuff) at the end of the XML file
@@ -631,10 +632,22 @@ class xbmcnfotv(Agent.TV_Shows):
 												nfo_ep_num = nfoXML.xpath('episode')[0].text
 												self.DLog('EpNum from NFO: ' + str(nfo_ep_num))
 											except: pass
-											if int(nfo_ep_num) == int(ep_num):
-												nfoText = nfoTextTemp
-												break
-
+											
+											if Prefs['multEpisodePlexPatch'] and nfoepc > 1:
+												try:
+													if nfopos == 1:
+														multEpTitlePlexPatch = nfoXML.xpath('title')[0].text
+														multEpSummaryPlexPatch = "(" + nfoXML.xpath('title')[0].text + ")" + nfoXML.xpath('plot')[0].text
+													else:
+														multEpTitlePlexPatch = multEpTitlePlexPatch + " : " nfoXML.xpath('title')[0].text
+														multEpSummaryPlexPatch = multEpSummaryPlexPatch + "\n" + "(" + nfoXML.xpath('title')[0].text + ")" + nfoXML.xpath('plot')[0].text
+												except: pass
+											
+											if not Prefs['multEpisodePlexPatch']:
+												if int(nfo_ep_num) == int(ep_num):
+													nfoText = nfoTextTemp
+													break
+											
 											nfopos = nfopos + 1
 
 										if nfopos > nfoepc:
@@ -642,10 +655,13 @@ class xbmcnfotv(Agent.TV_Shows):
 											return
 
 										# Ep. Title
-										try: episode.title = nfoXML.xpath('title')[0].text
-										except:
-											self.DLog("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
-											return
+										if Prefs['multEpisodePlexPatch'] and multEpTitlePlexPatch != "":
+											episode.title = multEpTitlePlexPatch
+										else:
+											try: episode.title = nfoXML.xpath('title')[0].text
+											except:
+												self.DLog("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
+												return
 										# Ep. Content Rating
 										try:
 											mpaa = nfoXML.xpath('./mpaa')[0].text
@@ -689,10 +705,13 @@ class xbmcnfotv(Agent.TV_Shows):
 											self.DLog("Exception parsing Ep Premiere: " + traceback.format_exc())
 											pass
 										# Ep. Summary
-										try: episode.summary = nfoXML.xpath('plot')[0].text
-										except:
-											episode.summary = ""
-											pass
+										if Prefs['multEpisodePlexPatch'] and multEpSummaryPlexPatch != "":
+											episode.summary = multEpSummaryPlexPatch
+										else:
+											try: episode.summary = nfoXML.xpath('plot')[0].text
+											except:
+												episode.summary = ""
+												pass
 										# Ep. Ratings
 										try:
 											epnforating = round(float(nfoXML.xpath("rating")[0].text.replace(',', '.')),1)
