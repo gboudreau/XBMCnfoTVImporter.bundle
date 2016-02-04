@@ -611,7 +611,7 @@ class xbmcnfotv(Agent.TV_Shows):
 										nfoepc = int(nfoTextLower.count('<episodedetails'))
 										nfopos = 1
 										multEpTitlePlexPatch = multEpSummaryPlexPatch = ""
-										multEpTestPlexPatch = false
+										multEpTestPlexPatch = 0
 										while nfopos <= nfoepc:
 											self.DLog("EpNum: " + str(ep_num) + " NFOEpCount:" + str(nfoepc) +" Current EpNFOPos: " + str(nfopos))
 											# Remove URLs (or other stuff) at the end of the XML file
@@ -636,16 +636,17 @@ class xbmcnfotv(Agent.TV_Shows):
 											
 											# Checks to see if first episode in file for Plex MultiEpisode Patch
 											if (nfopos == 1) and (int(nfo_ep_num) == int(ep_num)):
-												multEpTestPlexPatch = true
+												multEpTestPlexPatch = 1
 											
 											# Creates combined strings for Plex MultiEpisode Patch
 											if multEpTestPlexPatch and Prefs['multEpisodePlexPatch'] and (nfoepc > 1):
+												self.DLog('Multi Episode found: ' + str(nfo_ep_num))
 												try:
 													if nfopos == 1:
 														multEpTitlePlexPatch = nfoXML.xpath('title')[0].text
 														multEpSummaryPlexPatch = "(" + nfoXML.xpath('title')[0].text + ")" + nfoXML.xpath('plot')[0].text
 													else:
-														multEpTitlePlexPatch = multEpTitlePlexPatch + " : " nfoXML.xpath('title')[0].text
+														multEpTitlePlexPatch = multEpTitlePlexPatch + " : " + nfoXML.xpath('title')[0].text
 														multEpSummaryPlexPatch = multEpSummaryPlexPatch + "\n" + "(" + nfoXML.xpath('title')[0].text + ")" + nfoXML.xpath('plot')[0].text
 												except: pass
 											
@@ -662,6 +663,7 @@ class xbmcnfotv(Agent.TV_Shows):
 
 										# Ep. Title
 										if Prefs['multEpisodePlexPatch'] and (multEpTitlePlexPatch != ""):
+											self.DLog('using multi title: ' + multEpTitlePlexPatch)
 											episode.title = multEpTitlePlexPatch
 										else:
 											try: episode.title = nfoXML.xpath('title')[0].text
@@ -712,6 +714,7 @@ class xbmcnfotv(Agent.TV_Shows):
 											pass
 										# Ep. Summary
 										if Prefs['multEpisodePlexPatch'] and (multEpSummaryPlexPatch != ""):
+											self.DLog('using multi summary: ' + multEpSummaryPlexPatch)
 											episode.summary = multEpSummaryPlexPatch
 										else:
 											try: episode.summary = nfoXML.xpath('plot')[0].text
