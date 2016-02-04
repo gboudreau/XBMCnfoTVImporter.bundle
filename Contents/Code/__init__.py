@@ -611,6 +611,7 @@ class xbmcnfotv(Agent.TV_Shows):
 										nfoepc = int(nfoTextLower.count('<episodedetails'))
 										nfopos = 1
 										multEpTitlePlexPatch = multEpSummaryPlexPatch = ""
+										multEpTestPlexPatch = false
 										while nfopos <= nfoepc:
 											self.DLog("EpNum: " + str(ep_num) + " NFOEpCount:" + str(nfoepc) +" Current EpNFOPos: " + str(nfopos))
 											# Remove URLs (or other stuff) at the end of the XML file
@@ -633,7 +634,12 @@ class xbmcnfotv(Agent.TV_Shows):
 												self.DLog('EpNum from NFO: ' + str(nfo_ep_num))
 											except: pass
 											
-											if Prefs['multEpisodePlexPatch'] and nfoepc > 1:
+											# Checks to see if first episode in file for Plex MultiEpisode Patch
+											if (nfopos == 1) and (int(nfo_ep_num) == int(ep_num)):
+												multEpTestPlexPatch = true
+											
+											# Creates combined strings for Plex MultiEpisode Patch
+											if multEpTestPlexPatch and Prefs['multEpisodePlexPatch'] and (nfoepc > 1):
 												try:
 													if nfopos == 1:
 														multEpTitlePlexPatch = nfoXML.xpath('title')[0].text
@@ -643,7 +649,7 @@ class xbmcnfotv(Agent.TV_Shows):
 														multEpSummaryPlexPatch = multEpSummaryPlexPatch + "\n" + "(" + nfoXML.xpath('title')[0].text + ")" + nfoXML.xpath('plot')[0].text
 												except: pass
 											
-											if not Prefs['multEpisodePlexPatch']:
+											if not Prefs['multEpisodePlexPatch'] or (nfoepc == 1):
 												if int(nfo_ep_num) == int(ep_num):
 													nfoText = nfoTextTemp
 													break
@@ -655,7 +661,7 @@ class xbmcnfotv(Agent.TV_Shows):
 											return
 
 										# Ep. Title
-										if Prefs['multEpisodePlexPatch'] and multEpTitlePlexPatch != "":
+										if Prefs['multEpisodePlexPatch'] and (multEpTitlePlexPatch != ""):
 											episode.title = multEpTitlePlexPatch
 										else:
 											try: episode.title = nfoXML.xpath('title')[0].text
@@ -705,7 +711,7 @@ class xbmcnfotv(Agent.TV_Shows):
 											self.DLog("Exception parsing Ep Premiere: " + traceback.format_exc())
 											pass
 										# Ep. Summary
-										if Prefs['multEpisodePlexPatch'] and multEpSummaryPlexPatch != "":
+										if Prefs['multEpisodePlexPatch'] and (multEpSummaryPlexPatch != ""):
 											episode.summary = multEpSummaryPlexPatch
 										else:
 											try: episode.summary = nfoXML.xpath('plot')[0].text
