@@ -610,6 +610,8 @@ class xbmcnfotv(Agent.TV_Shows):
 										self.DLog("Looks like an XBMC NFO file (has <episodedetails>)")
 										nfoepc = int(nfoTextLower.count('<episodedetails'))
 										nfopos = 1
+										multEpTitlePlexPatch = multEpSummaryPlexPatch = ""
+										multEpTestPlexPatch = 0
 										while nfopos <= nfoepc:
 											self.DLog("EpNum: " + str(ep_num) + " NFOEpCount:" + str(nfoepc) +" Current EpNFOPos: " + str(nfopos))
 											# Remove URLs (or other stuff) at the end of the XML file
@@ -631,21 +633,43 @@ class xbmcnfotv(Agent.TV_Shows):
 												nfo_ep_num = nfoXML.xpath('episode')[0].text
 												self.DLog('EpNum from NFO: ' + str(nfo_ep_num))
 											except: pass
-											if int(nfo_ep_num) == int(ep_num):
-												nfoText = nfoTextTemp
-												break
-
+											
+											# Checks to see if first episode in file for Plex MultiEpisode Patch
+											if (nfopos == 1) and (int(nfo_ep_num) == int(ep_num)) and (nfoepc > 1):
+												multEpTestPlexPatch = 1
+											
+											# Creates combined strings for Plex MultiEpisode Patch
+											if multEpTestPlexPatch and Prefs['multEpisodePlexPatch'] and (nfoepc > 1):
+												self.DLog('Multi Episode found: ' + str(nfo_ep_num))
+												try:
+													if nfopos == 1:
+														multEpTitlePlexPatch = nfoXML.xpath('title')[0].text
+														multEpSummaryPlexPatch = "[Episode #" + str(nfo_ep_num) + " - " + nfoXML.xpath('title')[0].text + "] " + nfoXML.xpath('plot')[0].text
+													else:
+														multEpTitlePlexPatch = multEpTitlePlexPatch + " : " + nfoXML.xpath('title')[0].text
+														multEpSummaryPlexPatch = multEpSummaryPlexPatch + "\n" + "[Episode #" + str(nfo_ep_num) + " - " + nfoXML.xpath('title')[0].text + "] " + nfoXML.xpath('plot')[0].text
+												except: pass
+											
+											if not Prefs['multEpisodePlexPatch'] or (nfoepc == 1):
+												if int(nfo_ep_num) == int(ep_num):
+													nfoText = nfoTextTemp
+													break
+											
 											nfopos = nfopos + 1
 
-										if nfopos > nfoepc:
+										if not multEpTestPlexPatch and not Prefs['multEpisodePlexPatch'] and (nfopos > nfoepc):
 											self.DLog('No matching episode in nfo file!')
 											return
 
 										# Ep. Title
-										try: episode.title = nfoXML.xpath('title')[0].text
-										except:
-											self.DLog("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
-											return
+										if Prefs['multEpisodePlexPatch'] and (multEpTitlePlexPatch != ""):
+											self.DLog('using multi title: ' + multEpTitlePlexPatch)
+											episode.title = multEpTitlePlexPatch
+										else:
+											try: episode.title = nfoXML.xpath('title')[0].text
+											except:
+												self.DLog("ERROR: No <title> tag in " + nfoFile + ". Aborting!")
+												return
 										# Ep. Content Rating
 										try:
 											mpaa = nfoXML.xpath('./mpaa')[0].text
@@ -689,10 +713,14 @@ class xbmcnfotv(Agent.TV_Shows):
 											self.DLog("Exception parsing Ep Premiere: " + traceback.format_exc())
 											pass
 										# Ep. Summary
-										try: episode.summary = nfoXML.xpath('plot')[0].text
-										except:
-											episode.summary = ""
-											pass
+										if Prefs['multEpisodePlexPatch'] and (multEpSummaryPlexPatch != ""):
+											self.DLog('using multi summary: ' + multEpSummaryPlexPatch)
+											episode.summary = multEpSummaryPlexPatch
+										else:
+											try: episode.summary = nfoXML.xpath('plot')[0].text
+											except:
+												episode.summary = ""
+												pass
 										# Ep. Ratings
 										try:
 											epnforating = round(float(nfoXML.xpath("rating")[0].text.replace(',', '.')),1)
@@ -809,7 +837,7 @@ class xbmcnfotv(Agent.TV_Shows):
 										episodeThumbNames = []
 
 										#Multiepisode nfo thumbs
-										if nfoepc > 1:
+										if (nfoepc > 1) and not Prefs['multEpisodePlexPatch']:
 											for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.*'):
 												if "-E" in name: continue
 												episodeThumbNames.append (os.path.join(os.path.dirname(nfoFile), name))
