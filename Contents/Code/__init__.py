@@ -649,15 +649,14 @@ class xbmcnfotv(Agent.TV_Shows):
 														multEpTitlePlexPatch = multEpTitlePlexPatch + " : " + nfoXML.xpath('title')[0].text
 														multEpSummaryPlexPatch = multEpSummaryPlexPatch + "\n" + "[Episode #" + str(nfo_ep_num) + " - " + nfoXML.xpath('title')[0].text + "] " + nfoXML.xpath('plot')[0].text
 												except: pass
-											
-											if not multEpTestPlexPatch or not Prefs['multEpisodePlexPatch'] or (nfoepc == 1):
+											else:
 												if int(nfo_ep_num) == int(ep_num):
 													nfoText = nfoTextTemp
 													break
 											
 											nfopos = nfopos + 1
 
-										if not multEpTestPlexPatch and not Prefs['multEpisodePlexPatch'] and (nfopos > nfoepc):
+										if (not multEpTestPlexPatch or not Prefs['multEpisodePlexPatch']) and (nfopos > nfoepc):
 											self.DLog('No matching episode in nfo file!')
 											return
 
