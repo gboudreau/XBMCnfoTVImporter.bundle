@@ -71,7 +71,7 @@
   },
   {
     "id":"multEpisodePlexPatch",
-    "label":"Combine multiple episodes\n Multi episodes file naming must differ from plex naming convention to remove\\hide latter episodes from Plex scanner! (e.g. S01E01-02 instead of S01E01-E02)",
+    "label":"Combine multiple episodes infos. (File naming for multiple episodes must differ from plex naming convention to remove/hide latter episodes from Plex scanner! (e.g. S01E01-02 instead of S01E01-E02))",
     "type":"bool",
     "default":"false"
   }
