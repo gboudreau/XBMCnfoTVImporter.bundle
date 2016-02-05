@@ -634,8 +634,8 @@ class xbmcnfotv(Agent.TV_Shows):
 												self.DLog('EpNum from NFO: ' + str(nfo_ep_num))
 											except: pass
 											
-											# Checks to see if first episode in file for Plex MultiEpisode Patch
-											if (nfopos == 1) and (int(nfo_ep_num) == int(ep_num)) and (nfoepc > 1):
+											# Checks to see user has renamed files so plex ignores multiepisodes and confirms that there is more than on episodedetails
+											if not re.search('.s\d{1,3}e\d{1,3}e\d{1,3}.', path1.lower()) and not re.search('.s\d{1,3}e\d{1,3}-e\d{1,3}.', path1.lower()) and (nfoepc > 1):
 												multEpTestPlexPatch = 1
 											
 											# Creates combined strings for Plex MultiEpisode Patch
