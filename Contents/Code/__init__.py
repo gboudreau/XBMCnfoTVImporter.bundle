@@ -7,7 +7,7 @@
 # Cleanup and some extensions by SlrG
 # Logo by CrazyRabbit
 #
-import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
+import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefsp
 from dateutil.parser import parse
 
 PERCENT_RATINGS = {
@@ -650,7 +650,7 @@ class xbmcnfotv(Agent.TV_Shows):
 														multEpSummaryPlexPatch = multEpSummaryPlexPatch + "\n" + "[Episode #" + str(nfo_ep_num) + " - " + nfoXML.xpath('title')[0].text + "] " + nfoXML.xpath('plot')[0].text
 												except: pass
 											
-											if not Prefs['multEpisodePlexPatch'] or (nfoepc == 1):
+											if not multEpTestPlexPatch or not Prefs['multEpisodePlexPatch'] or (nfoepc == 1):
 												if int(nfo_ep_num) == int(ep_num):
 													nfoText = nfoTextTemp
 													break
