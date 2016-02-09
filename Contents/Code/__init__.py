@@ -6,6 +6,7 @@
 # Eden and Frodo compatibility added by Jorge Amigo
 # Cleanup and some extensions by SlrG
 # Logo by CrazyRabbit
+# Multi episode patch by random.server
 #
 import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 from dateutil.parser import parse
@@ -16,7 +17,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-39-g69eb208-166'
+	ver = '1.1-58-gef94b31-185'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -633,27 +634,28 @@ class xbmcnfotv(Agent.TV_Shows):
 												nfo_ep_num = nfoXML.xpath('episode')[0].text
 												self.DLog('EpNum from NFO: ' + str(nfo_ep_num))
 											except: pass
-											
+
 											# Checks to see user has renamed files so plex ignores multiepisodes and confirms that there is more than on episodedetails
-											if not re.search('.s\d{1,3}e\d{1,3}e\d{1,3}.', path1.lower()) and not re.search('.s\d{1,3}e\d{1,3}-e\d{1,3}.', path1.lower()) and (nfoepc > 1):
+											if not re.search('.s\d{1,3}e\d{1,3}[-]?e\d{1,3}.', path1.lower()) and (nfoepc > 1):
 												multEpTestPlexPatch = 1
-											
+
 											# Creates combined strings for Plex MultiEpisode Patch
 											if multEpTestPlexPatch and Prefs['multEpisodePlexPatch'] and (nfoepc > 1):
 												self.DLog('Multi Episode found: ' + str(nfo_ep_num))
+												multEpTitleSeparator = Prefs['multEpisodeTitleSeparator']
 												try:
 													if nfopos == 1:
 														multEpTitlePlexPatch = nfoXML.xpath('title')[0].text
 														multEpSummaryPlexPatch = "[Episode #" + str(nfo_ep_num) + " - " + nfoXML.xpath('title')[0].text + "] " + nfoXML.xpath('plot')[0].text
 													else:
-														multEpTitlePlexPatch = multEpTitlePlexPatch + " : " + nfoXML.xpath('title')[0].text
+														multEpTitlePlexPatch = multEpTitlePlexPatch + multEpTitleSeparator + nfoXML.xpath('title')[0].text
 														multEpSummaryPlexPatch = multEpSummaryPlexPatch + "\n" + "[Episode #" + str(nfo_ep_num) + " - " + nfoXML.xpath('title')[0].text + "] " + nfoXML.xpath('plot')[0].text
 												except: pass
 											else:
 												if int(nfo_ep_num) == int(ep_num):
 													nfoText = nfoTextTemp
 													break
-											
+
 											nfopos = nfopos + 1
 
 										if (not multEpTestPlexPatch or not Prefs['multEpisodePlexPatch']) and (nfopos > nfoepc):
