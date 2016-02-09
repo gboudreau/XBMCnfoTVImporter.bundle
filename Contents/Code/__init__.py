@@ -7,7 +7,7 @@
 # Cleanup and some extensions by SlrG
 # Logo by CrazyRabbit
 #
-import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefsp
+import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 from dateutil.parser import parse
 
 PERCENT_RATINGS = {
@@ -836,7 +836,7 @@ class xbmcnfotv(Agent.TV_Shows):
 										episodeThumbNames = []
 
 										#Multiepisode nfo thumbs
-										if (nfoepc > 1) and not Prefs['multEpisodePlexPatch']:
+										if (nfoepc > 1) and (not Prefs['multEpisodePlexPatch'] or not multEpTestPlexPatch):
 											for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.*'):
 												if "-E" in name: continue
 												episodeThumbNames.append (os.path.join(os.path.dirname(nfoFile), name))
