@@ -17,7 +17,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-59-g495d7b7-186'
+	ver = '1.1-60-gd02061b-187'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -194,7 +194,6 @@ class xbmcnfotv(Agent.TV_Shows):
 			path1 = os.path.dirname(String.Unquote(media.items[0].parts[0].file).encode('utf-8'))
 		except:
 			self.DLog ('Exception media.items[0].parts[0].file!')
-			self.DLog ("Traceback: " + traceback.format_exc())
 			pass
 		try:
 			if not path1:
@@ -598,7 +597,8 @@ class xbmcnfotv(Agent.TV_Shows):
 							self.DLog("UpdateEpisode called for episode (" + str(episode)+ ", " + str(ep_key) + ") S" + str(season_num.zfill(2)) + "E" + str(ep_num.zfill(2)))
 							if(ep_num.count('allLeaves') == 0):
 								pageUrl = "http://127.0.0.1:32400" + ep_key + "/tree"
-								path1 = XML.ElementFromURL(pageUrl).xpath('//MediaPart')[0].get('file')
+								path1 = String.Unquote(XML.ElementFromURL(pageUrl).xpath('//MediaPart')[0].get('file')).encode('utf-8')
+
 								self.DLog('UPDATE: ' + path1)
 								filepath = path1.split
 								path = os.path.dirname(path1)
