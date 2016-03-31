@@ -17,7 +17,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-58-gef94b31-185'
+	ver = '1.1-59-g495d7b7-186'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -188,14 +188,25 @@ class xbmcnfotv(Agent.TV_Shows):
 		duration_key = 'duration_'+id
 		Dict[duration_key] = [0] * 200
 		Log('Update called for TV Show with id = ' + id)
+		path1 = None
 		try:
-			filename=os.path.basename(media.items[0].parts[0].file)
-			path1 = os.path.dirname(media.items[0].parts[0].file)
+			filename=os.path.basename(String.Unquote(media.items[0].parts[0].file).encode('utf-8'))
+			path1 = os.path.dirname(String.Unquote(media.items[0].parts[0].file).encode('utf-8'))
 		except:
-			pageUrl = "http://127.0.0.1:32400/library/metadata/" + id + "/tree"
-			nfoXML = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
-			filename = os.path.basename(String.Unquote(nfoXML.get('file')))
-			path1 = os.path.dirname(String.Unquote(nfoXML.get('file')))
+			self.DLog ('Exception media.items[0].parts[0].file!')
+			self.DLog ("Traceback: " + traceback.format_exc())
+			pass
+		try:
+			if not path1:
+				pageUrl = "http://127.0.0.1:32400/library/metadata/" + id + "/tree"
+				nfoXML = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
+				filename = os.path.basename(String.Unquote(nfoXML.get('file').encode('utf-8')))
+				path1 = os.path.dirname(String.Unquote(nfoXML.get('file').encode('utf-8')))
+		except:
+			self.DLog ('Exception nfoXML.get(''file'')!')
+			self.DLog ("Traceback: " + traceback.format_exc())
+			pass
+			return
 
 		path = os.path.dirname(path1)
 
