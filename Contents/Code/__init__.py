@@ -17,7 +17,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-61-g906c48f-188'
+	ver = '1.1-62-gd239f3d-189'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -788,18 +788,19 @@ class xbmcnfotv(Agent.TV_Shows):
 												for credit in creditXML.text.split("/"):
 													credit_string = credit.strip()
 													self.DLog ("Credit String: " + credit_string)
-													if " (Producer)" in credit_string:
+													if re.search ("(Producer)", credit_string, re.IGNORECASE):
+														credit_string = re.sub ("\(Producer\)","",credit_string,flags=re.I).strip()
 														self.DLog ("Credit (Producer): " + credit_string)
-														episode.producers.add(credit_string.replace(" (Producer)",""))
+														episode.producers.add(credit_string)
 														continue
-													if " (Guest Star)" in credit_string:
+													if re.search ("(Guest Star)", credit_string, re.IGNORECASE):
+														credit_string = re.sub ("\(Guest Star\)","",credit_string,flags=re.I).strip()
 														self.DLog ("Credit (Guest Star): " + credit_string)
-														credit_string.replace(" (Guest Star)","")
 														episode.guest_stars.add(credit_string)
 														continue
-													if " (Writer)" in credit_string:
+													if re.search ("(Writer)", credit_string, re.IGNORECASE):
+														credit_string = re.sub ("\(Writer\)","",credit_string,flags=re.I).strip()
 														self.DLog ("Credit (Writer): " + credit_string)
-														credit_string.replace(" (Writer)","")
 														episode.writers.add(credit_string)
 														continue
 													self.DLog ("Unknown Credit (adding as Writer): " + credit_string)
