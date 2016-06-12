@@ -465,9 +465,9 @@ class xbmcnfotv(Agent.TV_Shows):
 				metadata.roles.clear()
 				for actor in nfoXML.xpath('actor'):
 					role = metadata.roles.new()
-					try: role.actor = actor.xpath("name")[0].text
+					try: role.name = actor.xpath("name")[0].text
 					except:
-						role.actor = "unknown"
+						role.name = "unknown"
 					try: role.role = actor.xpath("role")[0].text
 					except:
 						role.role = "unknown"
@@ -475,7 +475,7 @@ class xbmcnfotv(Agent.TV_Shows):
 					except: pass
 					# if role.photo and role.photo != 'None' and role.photo != '':
 						# data = HTTP.Request(actor.xpath("thumb")[0].text)
-						# Log('Added Thumbnail for: ' + role.actor)
+						# Log('Added Thumbnail for: ' + role.name)
 
 
 				Log("---------------------")
@@ -510,8 +510,8 @@ class xbmcnfotv(Agent.TV_Shows):
 				try: Log("Duration: " + str(metadata.duration // 60000) + ' min')
 				except: Log("Duration: -")
 				Log("Actors:")
-				try: [Log("\t" + actor.actor + " > " + actor.role) for actor in metadata.roles]
-				except: [Log("\t" + actor.actor) for actor in metadata.roles]
+				try: [Log("\t" + actor.name + " > " + actor.role) for actor in metadata.roles]
+				except: [Log("\t" + actor.name) for actor in metadata.roles]
 				except: Log("\t-")
 				Log("---------------------")
 
@@ -794,20 +794,20 @@ class xbmcnfotv(Agent.TV_Shows):
 													if re.search ("(Producer)", credit_string, re.IGNORECASE):
 														credit_string = re.sub ("\(Producer\)","",credit_string,flags=re.I).strip()
 														self.DLog ("Credit (Producer): " + credit_string)
-														episode.producers.add(credit_string)
+														episode.producers.new().name = credit_string
 														continue
 													if re.search ("(Guest Star)", credit_string, re.IGNORECASE):
 														credit_string = re.sub ("\(Guest Star\)","",credit_string,flags=re.I).strip()
 														self.DLog ("Credit (Guest Star): " + credit_string)
-														episode.guest_stars.add(credit_string)
+														episode.guest_stars.new().name = credit_string
 														continue
 													if re.search ("(Writer)", credit_string, re.IGNORECASE):
 														credit_string = re.sub ("\(Writer\)","",credit_string,flags=re.I).strip()
 														self.DLog ("Credit (Writer): " + credit_string)
-														episode.writers.add(credit_string)
+														episode.writers.new().name = credit_string
 														continue
 													self.DLog ("Unknown Credit (adding as Writer): " + credit_string)
-													episode.writers.add (credit_string)
+													episode.writers.new().name = credit_string
 										except:
 											self.DLog("Exception parsing Credits: " + traceback.format_exc())
 											pass
@@ -819,7 +819,7 @@ class xbmcnfotv(Agent.TV_Shows):
 												for director in directorXML.text.split("/"):
 													director_string = director.strip()
 													self.DLog ("Director: " + director)
-													episode.directors.add(director)
+													episode.directors.new().name = director
 										except:
 											self.DLog("Exception parsing Director: " + traceback.format_exc())
 											pass
@@ -887,10 +887,10 @@ class xbmcnfotv(Agent.TV_Shows):
 										try: Log("Summary: " + str(episode.summary))
 										except: Log("Summary: -")
 										Log("Writers:")
-										try: [Log("\t" + writer) for writer in episode.writers]
+										try: [Log("\t" + writer.name) for writer in episode.writers]
 										except: Log("\t-")
 										Log("Directors:")
-										try: [Log("\t" + director) for director in episode.directors]
+										try: [Log("\t" + director.name) for director in episode.directors]
 										except: Log("\t-")
 										try: Log("Duration: " + str(episode.duration // 60000) + ' min')
 										except: Log("Duration: -")
