@@ -7,6 +7,7 @@
 # Cleanup and some extensions by SlrG
 # Logo by CrazyRabbit
 # Multi episode patch by random.server
+# Fix of whole episodes getting cached as thumbnails by Em31Et
 #
 import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 from dateutil.parser import parse
@@ -17,7 +18,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-62-gd239f3d-189'
+	ver = '1.1-67-gcfffde4-194'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -614,7 +615,7 @@ class xbmcnfotv(Agent.TV_Shows):
 									nfoText = nfoText.replace ('</multiepisodenfo>','')
 									# strip Sick Beard's <xbmcmultiepisodenfo> tags
 									nfoText = nfoText.replace ('<xbmcmultiepisode>','')
-									nfoText = nfoText.replace ('</xbmcmultiepisode>','')									
+									nfoText = nfoText.replace ('</xbmcmultiepisode>','')
 									# work around failing XML parses for things with &'s in them. This may need to go farther than just &'s....
 									nfoText = re.sub(r'&(?![A-Za-z]+[0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)', r'&amp;', nfoText)
 									# remove empty xml tags from nfo
@@ -854,7 +855,7 @@ class xbmcnfotv(Agent.TV_Shows):
 
 										#Multiepisode nfo thumbs
 										if (nfoepc > 1) and (not Prefs['multEpisodePlexPatch'] or not multEpTestPlexPatch):
-											for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.*'):
+											for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.jpg'):
 												if "-E" in name: continue
 												episodeThumbNames.append (os.path.join(os.path.dirname(nfoFile), name))
 
