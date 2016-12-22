@@ -18,7 +18,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-69-g643c439-196'
+	ver = '1.1-70-g5d33ed5-197'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -224,58 +224,59 @@ class xbmcnfotv(Agent.TV_Shows):
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path1)
 
-		posterNames = []
-		posterNames.append (os.path.join(path, "poster.jpg"))
-		posterNames.append (os.path.join(path, "folder.jpg"))
-		posterNames.append (os.path.join(path, "show.jpg"))
-		posterNames.append (os.path.join(path, "season-all-poster.jpg"))
+		if not Prefs['localmediaagent']:
+			posterNames = []
+			posterNames.append (os.path.join(path, "poster.jpg"))
+			posterNames.append (os.path.join(path, "folder.jpg"))
+			posterNames.append (os.path.join(path, "show.jpg"))
+			posterNames.append (os.path.join(path, "season-all-poster.jpg"))
 
-		# check possible poster file locations
-		posterFilename = self.checkFilePaths (posterNames, 'poster')
+			# check possible poster file locations
+			posterFilename = self.checkFilePaths (posterNames, 'poster')
 
-		if posterFilename:
-			posterData = Core.storage.load(posterFilename)
-			metadata.posters['poster.jpg'] = Proxy.Media(posterData)
-			Log('Found poster image at ' + posterFilename)
+			if posterFilename:
+				posterData = Core.storage.load(posterFilename)
+				metadata.posters['poster.jpg'] = Proxy.Media(posterData)
+				Log('Found poster image at ' + posterFilename)
 
-		bannerNames = []
-		bannerNames.append (os.path.join(path, "banner.jpg"))
-		bannerNames.append (os.path.join(path, "folder-banner.jpg"))
+			bannerNames = []
+			bannerNames.append (os.path.join(path, "banner.jpg"))
+			bannerNames.append (os.path.join(path, "folder-banner.jpg"))
 
-		# check possible banner file locations
-		bannerFilename = self.checkFilePaths (bannerNames, 'banner')
+			# check possible banner file locations
+			bannerFilename = self.checkFilePaths (bannerNames, 'banner')
 
-		if bannerFilename:
-			bannerData = Core.storage.load(bannerFilename)
-			metadata.banners['banner.jpg'] = Proxy.Media(bannerData)
-			Log('Found banner image at ' + bannerFilename)
+			if bannerFilename:
+				bannerData = Core.storage.load(bannerFilename)
+				metadata.banners['banner.jpg'] = Proxy.Media(bannerData)
+				Log('Found banner image at ' + bannerFilename)
 
-		fanartNames = []
+			fanartNames = []
 
-		fanartNames.append (os.path.join(path, "fanart.jpg"))
-		fanartNames.append (os.path.join(path, "art.jpg"))
-		fanartNames.append (os.path.join(path, "backdrop.jpg"))
-		fanartNames.append (os.path.join(path, "background.jpg"))
+			fanartNames.append (os.path.join(path, "fanart.jpg"))
+			fanartNames.append (os.path.join(path, "art.jpg"))
+			fanartNames.append (os.path.join(path, "backdrop.jpg"))
+			fanartNames.append (os.path.join(path, "background.jpg"))
 
-		# check possible fanart file locations
-		fanartFilename = self.checkFilePaths (fanartNames, 'fanart')
+			# check possible fanart file locations
+			fanartFilename = self.checkFilePaths (fanartNames, 'fanart')
 
-		if fanartFilename:
-			fanartData = Core.storage.load(fanartFilename)
-			metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
-			Log('Found fanart image at ' + fanartFilename)
+			if fanartFilename:
+				fanartData = Core.storage.load(fanartFilename)
+				metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
+				Log('Found fanart image at ' + fanartFilename)
 
-		themeNames = []
+			themeNames = []
 
-		themeNames.append (os.path.join(path, "theme.mp3"))
+			themeNames.append (os.path.join(path, "theme.mp3"))
 
-		# check possible theme file locations
-		themeFilename = self.checkFilePaths (themeNames, 'theme')
+			# check possible theme file locations
+			themeFilename = self.checkFilePaths (themeNames, 'theme')
 
-		if themeFilename:
-			themeData = Core.storage.load(themeFilename)
-			metadata.themes['theme.mp3'] = Proxy.Media(themeData)
-			Log('Found theme music ' + themeFilename)
+			if themeFilename:
+				themeData = Core.storage.load(themeFilename)
+				metadata.themes['theme.mp3'] = Proxy.Media(themeData)
+				Log('Found theme music ' + themeFilename)
 
 		if media.title:
 			title = media.title
@@ -479,11 +480,12 @@ class xbmcnfotv(Agent.TV_Shows):
 					try: role.role = actor.xpath("role")[0].text
 					except:
 						role.role = "unknown"
-					try: role.photo = actor.xpath("thumb")[0].text
-					except: pass
-					# if role.photo and role.photo != 'None' and role.photo != '':
-						# data = HTTP.Request(actor.xpath("thumb")[0].text)
-						# Log('Added Thumbnail for: ' + role.name)
+					if not Prefs['localmediaagent']:
+						try: role.photo = actor.xpath("thumb")[0].text
+						except: pass
+						# if role.photo and role.photo != 'None' and role.photo != '':
+							# data = HTTP.Request(actor.xpath("thumb")[0].text)
+							# Log('Added Thumbnail for: ' + role.name)
 
 
 				Log("---------------------")
@@ -560,29 +562,30 @@ class xbmcnfotv(Agent.TV_Shows):
 						seasonFilenameFrodo = 'season%(number)02d-poster.jpg' % {"number": int(season_num)}
 						seasonFilenameEden = 'season%(number)02d.tbn' % {"number": int(season_num)}
 
-					seasonPosterNames = []
+					if not Prefs['localmediaagent']:
+						seasonPosterNames = []
 
-					#Frodo
-					seasonPosterNames.append (os.path.join(path, seasonFilenameFrodo))
-					seasonPosterNames.append (os.path.join(path, seasonFilenameZero))
-					seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameFrodo))
-					seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameZero))
-					#Eden
-					seasonPosterNames.append (os.path.join(path, seasonFilenameEden))
-					seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameEden))
-					#DLNA
-					seasonPosterNames.append (os.path.join(seasonPath, "folder.jpg"))
-					seasonPosterNames.append (os.path.join(seasonPath, "poster.jpg"))
-					#Fallback to Series Poster
-					seasonPosterNames.append (os.path.join(path, "poster.jpg"))
+						#Frodo
+						seasonPosterNames.append (os.path.join(path, seasonFilenameFrodo))
+						seasonPosterNames.append (os.path.join(path, seasonFilenameZero))
+						seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameFrodo))
+						seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameZero))
+						#Eden
+						seasonPosterNames.append (os.path.join(path, seasonFilenameEden))
+						seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameEden))
+						#DLNA
+						seasonPosterNames.append (os.path.join(seasonPath, "folder.jpg"))
+						seasonPosterNames.append (os.path.join(seasonPath, "poster.jpg"))
+						#Fallback to Series Poster
+						seasonPosterNames.append (os.path.join(path, "poster.jpg"))
 
-					# check possible season poster file locations
-					seasonPosterFilename = self.checkFilePaths (seasonPosterNames, 'season poster')
+						# check possible season poster file locations
+						seasonPosterFilename = self.checkFilePaths (seasonPosterNames, 'season poster')
 
-					if seasonPosterFilename:
-						seasonData = Core.storage.load(seasonPosterFilename)
-						metadata.seasons[season_num].posters[seasonFilename] = Proxy.Media(seasonData)
-						Log('Found season poster image at ' + seasonPosterFilename)
+						if seasonPosterFilename:
+							seasonData = Core.storage.load(seasonPosterFilename)
+							metadata.seasons[season_num].posters[seasonFilename] = Proxy.Media(seasonData)
+							Log('Found season poster image at ' + seasonPosterFilename)
 
 					episodeXML = []
 					epnumber = 0
@@ -866,28 +869,29 @@ class xbmcnfotv(Agent.TV_Shows):
 										except:
 											pass
 
-										episodeThumbNames = []
+										if not Prefs['localmediaagent']:
+											episodeThumbNames = []
 
-										#Multiepisode nfo thumbs
-										if (nfoepc > 1) and (not Prefs['multEpisodePlexPatch'] or not multEpTestPlexPatch):
-											for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.jpg'):
-												if "-E" in name: continue
-												episodeThumbNames.append (os.path.join(os.path.dirname(nfoFile), name))
+											#Multiepisode nfo thumbs
+											if (nfoepc > 1) and (not Prefs['multEpisodePlexPatch'] or not multEpTestPlexPatch):
+												for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.jpg'):
+													if "-E" in name: continue
+													episodeThumbNames.append (os.path.join(os.path.dirname(nfoFile), name))
 
-										#Frodo
-										episodeThumbNames.append (nfoFile.replace('.nfo', '-thumb.jpg'))
-										#Eden
-										episodeThumbNames.append (nfoFile.replace('.nfo', '.tbn'))
-										#DLNA
-										episodeThumbNames.append (nfoFile.replace('.nfo', '.jpg'))
+											#Frodo
+											episodeThumbNames.append (nfoFile.replace('.nfo', '-thumb.jpg'))
+											#Eden
+											episodeThumbNames.append (nfoFile.replace('.nfo', '.tbn'))
+											#DLNA
+											episodeThumbNames.append (nfoFile.replace('.nfo', '.jpg'))
 
-										# check possible episode thumb file locations
-										episodeThumbFilename = self.checkFilePaths (episodeThumbNames, 'episode thumb')
+											# check possible episode thumb file locations
+											episodeThumbFilename = self.checkFilePaths (episodeThumbNames, 'episode thumb')
 
-										if episodeThumbFilename:
-											thumbData = Core.storage.load(episodeThumbFilename)
-											episode.thumbs[episodeThumbFilename] = Proxy.Media(thumbData)
-											Log('Found episode thumb image at ' + episodeThumbFilename)
+											if episodeThumbFilename:
+												thumbData = Core.storage.load(episodeThumbFilename)
+												episode.thumbs[episodeThumbFilename] = Proxy.Media(thumbData)
+												Log('Found episode thumb image at ' + episodeThumbFilename)
 
 										Log("---------------------")
 										Log("Episode (S"+season_num.zfill(2)+"E"+ep_num.zfill(2)+") nfo Information")
