@@ -18,7 +18,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-67-gcfffde4-194'
+	ver = '1.1-68-g6d8684f-195'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -446,7 +446,6 @@ class xbmcnfotv(Agent.TV_Shows):
 					sets = nfoXML.xpath('set')
 					metadata.collections.clear()
 					[metadata.collections.add(s.strip()) for setXML in sets for s in setXML.text.split("/")]
-					metadata.collections.discard('')
 				except: pass
 				# Duration
 				try:
