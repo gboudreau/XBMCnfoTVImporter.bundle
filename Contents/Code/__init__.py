@@ -18,7 +18,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-68-g6d8684f-195'
+	ver = '1.1-69-g643c439-196'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -413,21 +413,29 @@ class xbmcnfotv(Agent.TV_Shows):
 					if addratings:
 						for addratingXML in addratings:
 							for addrating in addratingXML:
-								ratingprovider = str(addrating.attrib['moviedb'])
+								try:
+									ratingprovider = str(addrating.attrib['moviedb'])
+								except:
+									pass
+									self.DLog("Skipping additional rating without moviedb attribute!")
+									continue
 								ratingvalue = str(addrating.text.replace (',','.'))
 								if ratingprovider.lower() in PERCENT_RATINGS:
 									ratingvalue = ratingvalue + "%"
 								if ratingprovider in allowedratings or allowedratings == "":
 									self.DLog("adding rating: " + ratingprovider + ": " + ratingvalue)
 									addratingsstring = addratingsstring + " | " + ratingprovider + ": " + ratingvalue
-							self.DLog("Putting additional ratings at the " + Prefs['ratingspos'] + " of the summary!")
-							if Prefs['ratingspos'] == "front":
-								if Prefs['preserverating']:
-									metadata.summary = addratingsstring[3:] + self.unescape(" &#9733;\n\n") + metadata.summary
+							if addratingsstring != "":
+								self.DLog("Putting additional ratings at the " + Prefs['ratingspos'] + " of the summary!")
+								if Prefs['ratingspos'] == "front":
+									if Prefs['preserverating']:
+										metadata.summary = addratingsstring[3:] + self.unescape(" &#9733;\n\n") + metadata.summary
+									else:
+										metadata.summary = self.unescape("&#9733; ") + addratingsstring[3:] + self.unescape(" &#9733;\n\n") + metadata.summary
 								else:
-									metadata.summary = self.unescape("&#9733; ") + addratingsstring[3:] + self.unescape(" &#9733;\n\n") + metadata.summary
+									metadata.summary = metadata.summary + self.unescape("\n\n&#9733; ") + addratingsstring[3:] + self.unescape(" &#9733;")
 							else:
-								metadata.summary = metadata.summary + self.unescape("\n\n&#9733; ") + addratingsstring[3:] + self.unescape(" &#9733;")
+								self.DLog("Additional ratings empty or malformed!")
 					if Prefs['preserverating']:
 						self.DLog("Putting .nfo rating in front of summary!")
 						metadata.summary = self.unescape(str(Prefs['beforerating'])) + "{:.1f}".format(nforating) + self.unescape(str(Prefs['afterrating'])) + metadata.summary
@@ -759,21 +767,29 @@ class xbmcnfotv(Agent.TV_Shows):
 											if addepratings:
 												for addepratingXML in addepratings:
 													for addeprating in addepratingXML:
-														epratingprovider = str(addeprating.attrib['moviedb'])
+														try:
+															epratingprovider = str(addeprating.attrib['moviedb'])
+														except:
+															pass
+															self.DLog("Skipping additional episode rating without moviedb attribute!")
+															continue
 														epratingvalue = str(addeprating.text.replace (',','.'))
 														if epratingprovider.lower() in PERCENT_RATINGS:
 															epratingvalue = epratingvalue + "%"
 														if epratingprovider in allowedratings or allowedratings == "":
 															self.DLog("adding episode rating: " + epratingprovider + ": " + epratingvalue)
 															addepratingsstring = addepratingsstring + " | " + epratingprovider + ": " + epratingvalue
-												self.DLog("Putting additional episode ratings at the " + Prefs['ratingspos'] + " of the summary!")
-												if Prefs['ratingspos'] == "front":
-													if Prefs['preserveratingep']:
-														episode.summary = addepratingsstring[3:] + self.unescape(" &#9733;\n\n") + episode.summary
+												if addratingsstring != "":
+													self.DLog("Putting additional episode ratings at the " + Prefs['ratingspos'] + " of the summary!")
+													if Prefs['ratingspos'] == "front":
+														if Prefs['preserveratingep']:
+															episode.summary = addepratingsstring[3:] + self.unescape(" &#9733;\n\n") + episode.summary
+														else:
+															episode.summary = self.unescape("&#9733; ") + addepratingsstring[3:] + self.unescape(" &#9733;\n\n") + episode.summary
 													else:
-														episode.summary = self.unescape("&#9733; ") + addepratingsstring[3:] + self.unescape(" &#9733;\n\n") + episode.summary
+														episode.summary = episode.summary + self.unescape("\n\n&#9733; ") + addepratingsstring[3:] + self.unescape(" &#9733;")
 												else:
-													episode.summary = episode.summary + self.unescape("\n\n&#9733; ") + addepratingsstring[3:] + self.unescape(" &#9733;")
+													self.DLog("Additional episode ratings empty or malformed!")
 											if Prefs['preserveratingep']:
 												self.DLog("Putting Ep .nfo rating in front of summary!")
 												episode.summary = self.unescape(str(Prefs['beforeratingep'])) + "{:.1f}".format(epnforating) + self.unescape(str(Prefs['afterratingep'])) + episode.summary
