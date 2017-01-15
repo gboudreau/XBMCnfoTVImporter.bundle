@@ -65,7 +65,7 @@
     "type": "enum",
     "values": [
       "front",
-      "back",
+      "back"
     ],
     "default": "back"
   },
