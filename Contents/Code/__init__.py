@@ -8,6 +8,7 @@
 # Logo by CrazyRabbit
 # Multi episode patch by random.server
 # Fix of whole episodes getting cached as thumbnails by Em31Et
+# Krypton ratings fix by F4RHaD
 #
 import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 from dateutil.parser import parse
@@ -18,7 +19,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-70-g5d33ed5-197'
+	ver = '1.1-71-gcb2c6db-198'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -584,7 +585,7 @@ class xbmcnfotv(Agent.TV_Shows):
 
 						if seasonPosterFilename:
 							seasonData = Core.storage.load(seasonPosterFilename)
-							metadata.seasons[season_num].posters[seasonFilename] = Proxy.Media(seasonData)
+							metadata.seasons[season_num].posters[seasonPosterFilename] = Proxy.Media(seasonData)
 							Log('Found season poster image at ' + seasonPosterFilename)
 
 					episodeXML = []
