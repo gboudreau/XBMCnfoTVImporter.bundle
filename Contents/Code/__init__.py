@@ -19,10 +19,11 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-71-gcb2c6db-198'
+	ver = '1.1-72-g08a7d80-199'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
+	contributes_to = ['com.plexapp.agents.thetvdb']
 
 ##### helper functions #####
 	def DLog (self, LogMessage):
