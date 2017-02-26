@@ -19,7 +19,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-72-g08a7d80-199'
+	ver = '1.1-76-g52ed195-203'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -453,11 +453,34 @@ class xbmcnfotv(Agent.TV_Shows):
 					metadata.genres.discard('')
 				except: pass
 				# Collections (Set)
+				setname = None
 				try:
-					sets = nfoXML.xpath('set')
 					metadata.collections.clear()
-					[metadata.collections.add(s.strip()) for setXML in sets for s in setXML.text.split("/")]
-				except: pass
+					# trying enhanced set tag name first
+					setname = nfoXML.xpath("set")[0].xpath("name")[0].text
+					self.DLog('Enhanced set tag found: ' + setname)
+				except:
+					self.DLog('No enhanced set tag found...')
+					pass
+				try:
+					# fallback to flat style set tag
+					if not setname:
+						setname = nfoXML.xpath("set")[0].text
+						self.DLog('Set tag found: ' + setname)
+				except:
+					self.DLog('No set tag found...')
+					pass
+				if setname:
+					metadata.collections.add (setname)
+					self.DLog('Added Collection from Set tag.')
+				# Collections (Tags)
+				try:
+					tags = nfoXML.xpath('tag')
+					[metadata.collections.add(t.strip()) for tag_xml in tags for t in tag_xml.text.split('/')]
+					self.DLog('Added Collection(s) from tags.')
+				except:
+					self.DLog('Error adding Collection(s) from tags.')
+					pass
 				# Duration
 				try:
 					sruntime = nfoXML.xpath("durationinseconds")[0].text
