@@ -19,7 +19,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-76-g52ed195-203'
+	ver = '1.1-77-g821a019-204'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -457,7 +457,7 @@ class xbmcnfotv(Agent.TV_Shows):
 				try:
 					metadata.collections.clear()
 					# trying enhanced set tag name first
-					setname = nfoXML.xpath("set")[0].xpath("name")[0].text
+					setname = nfoXML.xpath('set')[0].xpath('name')[0].text
 					self.DLog('Enhanced set tag found: ' + setname)
 				except:
 					self.DLog('No enhanced set tag found...')
@@ -465,7 +465,7 @@ class xbmcnfotv(Agent.TV_Shows):
 				try:
 					# fallback to flat style set tag
 					if not setname:
-						setname = nfoXML.xpath("set")[0].text
+						setname = nfoXML.xpath('set')[0].text
 						self.DLog('Set tag found: ' + setname)
 				except:
 					self.DLog('No set tag found...')
