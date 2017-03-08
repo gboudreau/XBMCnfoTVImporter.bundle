@@ -505,12 +505,11 @@ class xbmcnfotv(Agent.TV_Shows):
 					try: role.role = actor.xpath("role")[0].text
 					except:
 						role.role = "unknown"
-					if not Prefs['localmediaagent']:
-						try: role.photo = actor.xpath("thumb")[0].text
-						except: pass
-						# if role.photo and role.photo != 'None' and role.photo != '':
-							# data = HTTP.Request(actor.xpath("thumb")[0].text)
-							# Log('Added Thumbnail for: ' + role.name)
+					try: role.photo = actor.xpath("thumb")[0].text
+					except: pass
+					# if role.photo and role.photo != 'None' and role.photo != '':
+					# data = HTTP.Request(actor.xpath("thumb")[0].text)
+					# Log('Added Thumbnail for: ' + role.name)
 
 
 				Log("---------------------")
