@@ -9,6 +9,7 @@
 # Multi episode patch by random.server
 # Fix of whole episodes getting cached as thumbnails by Em31Et
 # Krypton ratings fix by F4RHaD
+# Season banner and season art support by Christian
 #
 import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 from dateutil.parser import parse
@@ -19,7 +20,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-77-g821a019-204'
+	ver = '1.1-80-g0fece53-207'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -610,6 +611,40 @@ class xbmcnfotv(Agent.TV_Shows):
 							seasonData = Core.storage.load(seasonPosterFilename)
 							metadata.seasons[season_num].posters[seasonPosterFilename] = Proxy.Media(seasonData)
 							Log('Found season poster image at ' + seasonPosterFilename)
+
+						# Season Banner
+						seasonBannerFileName = 'season%(number)02d-banner.jpg' % {"number": int(season_num)}
+
+						seasonBannerNames = []
+						seasonBannerNames.append (os.path.join(seasonPath, seasonBannerFileName))
+						seasonBannerNames.append (os.path.join(seasonPath, "banner.jpg"))
+						seasonBannerNames.append (os.path.join(seasonPath, "folder-banner.jpg"))
+						seasonBannerNames.append (os.path.join(path, seasonBannerFileName))
+						seasonBannerNames.append (os.path.join(path, "banner.jpg"))
+						seasonBannerNames.append (os.path.join(path, "folder-banner.jpg"))
+
+						# check possible banner file locations
+						seasonBanner = self.checkFilePaths (seasonBannerNames, 'season banner')
+
+						if seasonBanner:
+							seasonBannerData = Core.storage.load(seasonBanner)
+							metadata.seasons[season_num].banners[seasonBanner] = Proxy.Media(seasonBannerData)
+							Log('Found season banner image at ' + seasonBanner)
+
+						# Season Fanart
+						seasonFanartFileName = 'season%(number)02d-fanart.jpg' % {"number": int(season_num)}
+						seasonFanartNames = []
+						seasonFanartNames.append (os.path.join(seasonPath, seasonFanartFileName))
+						seasonFanartNames.append (os.path.join(path, seasonFanartFileName))
+						seasonFanartNames.append (os.path.join(path, "fanart.jpg"))
+
+						# check possible Fanart file locations
+						seasonFanart = self.checkFilePaths (seasonFanartNames, 'season fanart')
+
+						if seasonFanart:
+							seasonFanartData = Core.storage.load(seasonFanart)
+							metadata.seasons[season_num].art[seasonFanart] = Proxy.Media(seasonFanartData)
+							Log('Found season fanart image at ' + seasonFanart)
 
 					episodeXML = []
 					epnumber = 0
