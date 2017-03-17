@@ -20,7 +20,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-82-g025efd4-209'
+	ver = '1.1-83-g1391480-210'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -96,22 +96,35 @@ class xbmcnfotv(Agent.TV_Shows):
 		Log ("" + self.name + " Version: " + self.ver)
 		self.DLog("Plex Server Version: " + Platform.ServerVersion)
 
-		self.DLog(media.primary_metadata)
-		filename = os.path.basename(String.Unquote(media.filename).encode('utf-8'))
-		path1 = os.path.dirname(String.Unquote(media.filename).encode('utf-8'))
-		self.DLog(path1)
+		id = media.id
+		path1 = None
+		try:
+			pageUrl = "http://127.0.0.1:32400/library/metadata/" + id + "/tree"
+			nfoXML = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
+			filename = os.path.basename(String.Unquote(nfoXML.get('file').encode('utf-8')))
+			path1 = os.path.dirname(String.Unquote(nfoXML.get('file').encode('utf-8')))
+		except:
+			self.DLog ('Exception nfoXML.get(''file'')!')
+			self.DLog ("Traceback: " + traceback.format_exc())
+			pass
+			return
+
+		self.DLog("Path from XML: " + str(path1))
 		path = os.path.dirname(path1)
 		nfoName = os.path.join(path, "tvshow.nfo")
 		self.DLog('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
 			nfoName = os.path.join(path1, "tvshow.nfo")
 			self.DLog('Looking for TV Show NFO file at ' + nfoName)
+			path = path1
 		if not os.path.exists(nfoName):
 			path2 = os.path.dirname(os.path.dirname(path))
 			nfoName = os.path.join(path2, "tvshow.nfo")
 			self.DLog('Looking for TV Show NFO file at ' + nfoName)
+			path = path2
+		if not os.path.exists(nfoName):
+			path = os.path.dirname(path1)
 
-		id = media.id
 		year = 0
 		if media.title:
 			title = media.title
@@ -196,25 +209,19 @@ class xbmcnfotv(Agent.TV_Shows):
 		Log('Update called for TV Show with id = ' + id)
 		path1 = None
 		try:
-			filename=os.path.basename(String.Unquote(media.items[0].parts[0].file).encode('utf-8'))
-			path1 = os.path.dirname(String.Unquote(media.items[0].parts[0].file).encode('utf-8'))
-		except:
-			self.DLog ('Exception media.items[0].parts[0].file!')
-			pass
-		try:
-			if not path1:
-				pageUrl = "http://127.0.0.1:32400/library/metadata/" + id + "/tree"
-				nfoXML = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
-				filename = os.path.basename(String.Unquote(nfoXML.get('file').encode('utf-8')))
-				path1 = os.path.dirname(String.Unquote(nfoXML.get('file').encode('utf-8')))
+			pageUrl = "http://127.0.0.1:32400/library/metadata/" + id + "/tree"
+			nfoXML = XML.ElementFromURL(pageUrl).xpath('//MediaContainer/MetadataItem/MetadataItem/MetadataItem/MediaItem/MediaPart')[0]
+			filename = os.path.basename(String.Unquote(nfoXML.get('file').encode('utf-8')))
+			path1 = os.path.dirname(String.Unquote(nfoXML.get('file').encode('utf-8')))
 		except:
 			self.DLog ('Exception nfoXML.get(''file'')!')
 			self.DLog ("Traceback: " + traceback.format_exc())
 			pass
 			return
 
-		path = os.path.dirname(path1)
 
+		self.DLog("Path from XML: " + str(path1))
+		path = os.path.dirname(path1)
 		nfoName = os.path.join(path, "tvshow.nfo")
 		self.DLog('Looking for TV Show NFO file at ' + nfoName)
 		if not os.path.exists(nfoName):
