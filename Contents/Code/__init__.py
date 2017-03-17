@@ -20,7 +20,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-81-gd3f48a2-208'
+	ver = '1.1-82-g025efd4-209'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -94,6 +94,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("Entering search function")
 		self.DLog("++++++++++++++++++++++++")
 		Log ("" + self.name + " Version: " + self.ver)
+		self.DLog("Plex Server Version: " + Platform.ServerVersion)
 
 		self.DLog(media.primary_metadata)
 		filename = os.path.basename(String.Unquote(media.filename).encode('utf-8'))
@@ -185,6 +186,7 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("Entering update function")
 		self.DLog("++++++++++++++++++++++++")
 		Log ("" + self.name + " Version: " + self.ver)
+		self.DLog("Plex Server Version: " + Platform.ServerVersion)
 
 		Dict.Reset()
 		metadata.duration = None
