@@ -20,7 +20,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-83-g1391480-210'
+	ver = '1.1-84-g0195858-211'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -507,15 +507,15 @@ class xbmcnfotv(Agent.TV_Shows):
 						pass
 				# Actors
 				metadata.roles.clear()
-				for actor in nfoXML.xpath('actor'):
+				for n, actor in enumerate(nfoXML.xpath('actor')):
 					role = metadata.roles.new()
 					try: role.name = actor.xpath("name")[0].text
 					except:
-						role.name = "unknown"
+						role.name = "Unknown Name " + str(n)
 						pass
 					try: role.role = actor.xpath("role")[0].text
 					except:
-						role.role = "unknown"
+						role.role = "Unknown Role " + str(n)
 						pass
 					try: role.photo = actor.xpath("thumb")[0].text
 					except: pass
