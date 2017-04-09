@@ -20,7 +20,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-85-g78f0048-212'
+	ver = '1.1-86-g1d63d95-213'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -395,13 +395,21 @@ class xbmcnfotv(Agent.TV_Shows):
 				except:
 					self.DLog("Exception parsing Premiere: " + traceback.format_exc())
 					pass
+				metadata.summary = ''
+				# Status
+				try:
+					status = nfoXML.xpath('status')[0].text.strip()
+					if Prefs['statusinsummary']:
+						self.DLog('User setting adds show status (' + status + ') in front of summary...')
+						metadata.summary = 'Status: ' + status + ' | '
+				except:
+					pass
 				# Tagline - not supported by TVShow Object!!!
 				try: metadata.tagline = nfoXML.findall("tagline")[0].text
 				except: pass
 				# Summary (Plot)
-				try: metadata.summary = nfoXML.xpath("plot")[0].text
+				try: metadata.summary = metadata.summary + nfoXML.xpath("plot")[0].text
 				except:
-					metadata.summary = ""
 					pass
 				# Ratings
 				try:

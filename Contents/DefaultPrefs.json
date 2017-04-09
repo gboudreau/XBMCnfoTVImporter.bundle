@@ -36,6 +36,12 @@
     "default":"false"
   },
   {
+    "id":"statusinsummary",
+    "label":"show status (ended/continuing) in front of summary\n__________________________________________________________________________________________",
+    "type":"bool",
+    "default":"false"
+  },
+  {
     "id":"beforeratingep",
     "label":"text before episode rating (supports html specialchars!):",
     "type":"text",
