@@ -20,7 +20,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-86-g1d63d95-213'
+	ver = '1.1-87-gb225c24-214'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -514,23 +514,29 @@ class xbmcnfotv(Agent.TV_Shows):
 						self.DLog("No Series Episode Duration in tvschow.nfo file.")
 						pass
 				# Actors
+				rroles = []
 				metadata.roles.clear()
 				for n, actor in enumerate(nfoXML.xpath('actor')):
-					role = metadata.roles.new()
-					try: role.name = actor.xpath("name")[0].text
+					newrole = metadata.roles.new()
+					try:
+						newrole.name = actor.xpath('name')[0].text
 					except:
-						role.name = "Unknown Name " + str(n)
+						newrole.name = 'Unknown Name ' + str(n)
 						pass
-					try: role.role = actor.xpath("role")[0].text
+					try:
+						role = actor.xpath('role')[0].text
+						if role in rroles:
+							newrole.role = role + ' ' + str(n)
+						else:
+							newrole.role = role
+						rroles.append (newrole.role)
 					except:
-						role.role = "Unknown Role " + str(n)
+						newrole.role = 'Unknown Role ' + str(n)
 						pass
-					try: role.photo = actor.xpath("thumb")[0].text
-					except: pass
-					# if role.photo and role.photo != 'None' and role.photo != '':
-					# data = HTTP.Request(actor.xpath("thumb")[0].text)
-					# Log('Added Thumbnail for: ' + role.name)
-
+					try:
+						newrole.photo = actor.xpath('thumb')[0].text
+					except:
+						pass
 
 				Log("---------------------")
 				Log("Series nfo Information")
