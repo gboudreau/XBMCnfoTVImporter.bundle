@@ -13,6 +13,8 @@
 #
 import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 from dateutil.parser import parse
+import urllib
+import urlparse
 
 PERCENT_RATINGS = {
   'rottentomatoes','rotten tomatoes','rt','flixster'
@@ -20,7 +22,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-87-gb225c24-214'
+	ver = '1.1-88-g24c2489-215'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -533,10 +535,60 @@ class xbmcnfotv(Agent.TV_Shows):
 					except:
 						newrole.role = 'Unknown Role ' + str(n)
 						pass
-					try:
-						newrole.photo = actor.xpath('thumb')[0].text
-					except:
-						pass
+					newrole.photo = ''
+					athumbloc = Prefs['athumblocation']
+					if athumbloc in ['local','global']:
+						aname = None
+						try:
+							try:
+								aname = actor.xpath('name')[0].text
+							except:
+								pass
+							if aname:
+								aimagefilename = aname.replace(' ', '_') + '.jpg'
+								athumbpath = Prefs['athumbpath'].rstrip ('/')
+								if not athumbpath == '':
+									if athumbloc == 'local':
+										localpath = os.path.join (path,'.actors',aimagefilename)
+										scheme, netloc, spath, qs, anchor = urlparse.urlsplit(athumbpath)
+										basepath = os.path.basename (spath)
+										self.DLog ('Searching for additional path parts after: ' + basepath)
+										searchpos = spath.find (basepath)
+										addpos = searchpos + len(basepath)
+										addpath = os.path.dirname(spath)[addpos:]
+										if searchpos != -1 and addpath !='':
+											self.DLog ('Found additional path parts: ' + addpath)
+										else:
+											addpath = ''
+											self.DLog ('Found no additional path parts.')
+										aimagepath = athumbpath + addpath + '/' + os.path.basename(path) + '/.actors/' + aimagefilename
+										if not os.path.isfile(localpath):
+											self.DLog ('failed setting ' + athumbloc + ' actor photo: ' + aimagepath)
+											aimagepath = None
+									if athumbloc == 'global':
+										aimagepath = athumbpath + '/' + aimagefilename
+										scheme, netloc, spath, qs, anchor = urlparse.urlsplit(aimagepath)
+										spath = urllib.quote(spath, '/%')
+										qs = urllib.quote_plus(qs, ':&=')
+										aimagepathurl = urlparse.urlunsplit((scheme, netloc, spath, qs, anchor))
+										response = urllib.urlopen(aimagepathurl).code
+										if not response == 200:
+											self.DLog ('failed setting ' + athumbloc + ' actor photo: ' + aimagepath)
+											aimagepath = None
+									if aimagepath:
+										newrole.photo = aimagepath
+										self.DLog ('success setting ' + athumbloc + ' actor photo: ' + aimagepath)
+						except:
+							self.DLog ('exception setting local or global actor photo!')
+							self.DLog ("Traceback: " + traceback.format_exc())
+							pass
+					if athumbloc == 'link' or not newrole.photo:
+						try:
+							newrole.photo = actor.xpath('thumb')[0].text
+							self.DLog ('linked actor photo: ' + newrole.photo)
+						except:
+							self.DLog ('failed setting linked actor photo!')
+							pass
 
 				Log("---------------------")
 				Log("Series nfo Information")
