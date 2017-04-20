@@ -22,7 +22,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-88-g24c2489-215'
+	ver = '1.1-89-g56445fe-216'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -97,6 +97,11 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("++++++++++++++++++++++++")
 		Log ("" + self.name + " Version: " + self.ver)
 		self.DLog("Plex Server Version: " + Platform.ServerVersion)
+
+		if Prefs['debug']:
+			Log ('Agents debug logging is enabled!')
+		else:
+			Log ('Agents debug logging is disabled!')
 
 		id = media.id
 		path1 = None
@@ -202,6 +207,11 @@ class xbmcnfotv(Agent.TV_Shows):
 		self.DLog("++++++++++++++++++++++++")
 		Log ("" + self.name + " Version: " + self.ver)
 		self.DLog("Plex Server Version: " + Platform.ServerVersion)
+
+		if Prefs['debug']:
+			Log ('Agents debug logging is enabled!')
+		else:
+			Log ('Agents debug logging is disabled!')
 
 		Dict.Reset()
 		metadata.duration = None
