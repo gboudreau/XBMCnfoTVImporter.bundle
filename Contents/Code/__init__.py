@@ -22,7 +22,7 @@ PERCENT_RATINGS = {
 
 class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
-	ver = '1.1-91-ge467a60-218'
+	ver = '1.1-92-gf4e235d-219'
 	primary_provider = True
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
@@ -804,7 +804,10 @@ class xbmcnfotv(Agent.TV_Shows):
 											try:
 												nfo_ep_num = nfoXML.xpath('episode')[0].text
 												self.DLog('EpNum from NFO: ' + str(nfo_ep_num))
-											except: pass
+											except:
+												self.DLog('No EpNum from NFO! Assuming: ' + ep_num)
+												nfo_ep_num = ep_num
+												pass
 
 											# Checks to see user has renamed files so plex ignores multiepisodes and confirms that there is more than on episodedetails
 											if not re.search('.s\d{1,3}e\d{1,3}[-]?e\d{1,3}.', path1.lower()) and (nfoepc > 1):
