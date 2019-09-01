@@ -563,9 +563,9 @@ class xbmcnfotv(Agent.TV_Shows):
 										scheme, netloc, spath, qs, anchor = urlparse.urlsplit(athumbpath)
 										basepath = os.path.basename (spath)
 										self.DLog ('Searching for additional path parts after: ' + basepath)
-										searchpos = spath.find (basepath)
+										searchpos = path.find (basepath)
 										addpos = searchpos + len(basepath)
-										addpath = os.path.dirname(spath)[addpos:]
+										addpath = os.path.dirname(path)[addpos:]
 										if searchpos != -1 and addpath !='':
 											self.DLog ('Found additional path parts: ' + addpath)
 										else:
