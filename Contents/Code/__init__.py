@@ -449,15 +449,20 @@ class xbmcnfotv(Agent.TV_Shows):
 								try:
 									ratingprovider = str(addrating.attrib['moviedb'])
 								except:
-									pass
-									self.DLog("Skipping additional rating without moviedb attribute!")
-									continue
+									try:
+										ratingprovider = str(addrating.attrib['name'])
+										addrating = addrating[0]
+									except:
+										pass
+										self.DLog("Skipping additional rating without provider attribute!")
+										continue
 								ratingvalue = str(addrating.text.replace (',','.'))
 								if ratingprovider.lower() in PERCENT_RATINGS:
 									ratingvalue = ratingvalue + "%"
 								if ratingprovider in allowedratings or allowedratings == "":
 									self.DLog("adding rating: " + ratingprovider + ": " + ratingvalue)
 									addratingsstring = addratingsstring + " | " + ratingprovider + ": " + ratingvalue
+								nforating = round(float(ratingvalue),1)
 							if addratingsstring != "":
 								self.DLog("Putting additional ratings at the " + Prefs['ratingspos'] + " of the summary!")
 								if Prefs['ratingspos'] == "front":
