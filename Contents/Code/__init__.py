@@ -430,8 +430,15 @@ class xbmcnfotv(Agent.TV_Shows):
 					self.DLog("Series Rating found: " + str(nforating))
 				except:
 					self.DLog("Can't read rating from tvshow.nfo.")
-					nforating = 0.0
-					pass
+					self.DLog("Trying to get a rating of additional ratings from tvshow.nfo.")
+					try:
+						nforating = round(float(nfoXML.xpath("ratings")[0][0][0].text.replace(',', '.')),1)
+						metadata.rating = nforating
+						self.DLog("Found first rating in additional ratings: " + str(nforating))
+					except:
+						self.DLog("Can't read ratings from tvshow.nfo.")
+						nforating = 0.0
+						pass
 				if Prefs['altratings']:
 					self.DLog("Searching for additional Ratings...")
 					allowedratings = Prefs['ratings']
@@ -449,9 +456,13 @@ class xbmcnfotv(Agent.TV_Shows):
 								try:
 									ratingprovider = str(addrating.attrib['moviedb'])
 								except:
-									pass
-									self.DLog("Skipping additional rating without moviedb attribute!")
-									continue
+									try:
+										ratingprovider = str(addrating.attrib['name'])
+										addrating = addrating[0]
+									except:
+										pass
+										self.DLog("Skipping additional rating without provider attribute!")
+										continue
 								ratingvalue = str(addrating.text.replace (',','.'))
 								if ratingprovider.lower() in PERCENT_RATINGS:
 									ratingvalue = ratingvalue + "%"
