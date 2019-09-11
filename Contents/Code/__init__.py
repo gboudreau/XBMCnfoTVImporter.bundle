@@ -15,6 +15,7 @@ import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
 from dateutil.parser import parse
 import urllib
 import urlparse
+import hashlib
 
 PERCENT_RATINGS = {
   'rottentomatoes','rotten tomatoes','rt','flixster'
@@ -24,6 +25,7 @@ class xbmcnfotv(Agent.TV_Shows):
 	name = 'XBMCnfoTVImporter'
 	ver = '1.1-93-gc3e9112-220'
 	primary_provider = True
+	persist_stored_files = False
 	languages = [Locale.Language.NoLanguage]
 	accepts_from = ['com.plexapp.agents.localmedia','com.plexapp.agents.opensubtitles','com.plexapp.agents.podnapisi','com.plexapp.agents.plexthememusic','com.plexapp.agents.subzero']
 	contributes_to = ['com.plexapp.agents.thetvdb']
@@ -260,7 +262,9 @@ class xbmcnfotv(Agent.TV_Shows):
 
 			if posterFilename:
 				posterData = Core.storage.load(posterFilename)
-				metadata.posters['poster.jpg'] = Proxy.Media(posterData)
+				posterHash = hashlib.md5(posterData).hexdigest()
+				metadata.posters[posterHash] = Proxy.Media(posterData)
+				metadata.posters.validate_keys([posterHash])
 				Log('Found poster image at ' + posterFilename)
 
 			bannerNames = []
@@ -272,7 +276,9 @@ class xbmcnfotv(Agent.TV_Shows):
 
 			if bannerFilename:
 				bannerData = Core.storage.load(bannerFilename)
-				metadata.banners['banner.jpg'] = Proxy.Media(bannerData)
+				bannerHash = hashlib.md5(bannerData).hexdigest()
+				metadata.banners[bannerHash] = Proxy.Media(bannerData)
+				metadata.banners.validate_keys([bannerHash])
 				Log('Found banner image at ' + bannerFilename)
 
 			fanartNames = []
@@ -287,7 +293,9 @@ class xbmcnfotv(Agent.TV_Shows):
 
 			if fanartFilename:
 				fanartData = Core.storage.load(fanartFilename)
-				metadata.art['fanart.jpg'] = Proxy.Media(fanartData)
+				fanartHash = hashlib.md5(fanartData).hexdigest()
+				metadata.art[fanartHash] = Proxy.Media(fanartData)
+				metadata.art.validate_keys([fanartHash])
 				Log('Found fanart image at ' + fanartFilename)
 
 			themeNames = []
@@ -299,7 +307,9 @@ class xbmcnfotv(Agent.TV_Shows):
 
 			if themeFilename:
 				themeData = Core.storage.load(themeFilename)
-				metadata.themes['theme.mp3'] = Proxy.Media(themeData)
+				themeHash = hashlib.md5(themeData).hexdigest()
+				metadata.themes[themeHash] = Proxy.Media(themeData)
+				metadata.themes.validate_keys([themeHash])
 				Log('Found theme music ' + themeFilename)
 
 		if media.title:
@@ -707,7 +717,9 @@ class xbmcnfotv(Agent.TV_Shows):
 
 						if seasonPosterFilename:
 							seasonData = Core.storage.load(seasonPosterFilename)
-							metadata.seasons[season_num].posters[seasonPosterFilename] = Proxy.Media(seasonData)
+							seasonHash = hashlib.md5(seasonData).hexdigest()
+							metadata.seasons[season_num].posters[seasonHash] = Proxy.Media(seasonData)
+							metadata.seasons[season_num].posters.validate_keys([seasonHash])
 							Log('Found season poster image at ' + seasonPosterFilename)
 
 						# Season Banner
@@ -726,7 +738,9 @@ class xbmcnfotv(Agent.TV_Shows):
 
 						if seasonBanner:
 							seasonBannerData = Core.storage.load(seasonBanner)
-							metadata.seasons[season_num].banners[seasonBanner] = Proxy.Media(seasonBannerData)
+							seasonBannerHash = hashlib.md5(seasonBannerData).hexdigest()
+							metadata.seasons[season_num].banners[seasonBannerHash] = Proxy.Media(seasonBannerData)
+							metadata.seasons[season_num].banners.validate_keys([seasonBannerHash])
 							Log('Found season banner image at ' + seasonBanner)
 
 						# Season Fanart
@@ -741,7 +755,9 @@ class xbmcnfotv(Agent.TV_Shows):
 
 						if seasonFanart:
 							seasonFanartData = Core.storage.load(seasonFanart)
-							metadata.seasons[season_num].art[seasonFanart] = Proxy.Media(seasonFanartData)
+							seasonFanartHash = hashlib.md5(seasonFanartData).hexdigest()
+							metadata.seasons[season_num].art[seasonFanartHash] = Proxy.Media(seasonFanartData)
+							metadata.seasons[season_num].art.validate_keys([seasonFanartHash])
 							Log('Found season fanart image at ' + seasonFanart)
 
 					episodeXML = []
@@ -1050,7 +1066,9 @@ class xbmcnfotv(Agent.TV_Shows):
 
 											if episodeThumbFilename:
 												thumbData = Core.storage.load(episodeThumbFilename)
-												episode.thumbs[episodeThumbFilename] = Proxy.Media(thumbData)
+												thumbHash = hashlib.md5(thumbData).hexdigest()
+												episode.thumbs[thumbHash] = Proxy.Media(thumbData)
+												episode.thumbs.validate_keys([thumbHash])
 												Log('Found episode thumb image at ' + episodeThumbFilename)
 
 										Log("---------------------")
