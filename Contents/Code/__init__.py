@@ -697,9 +697,10 @@ class xbmcnfotv(Agent.TV_Shows):
 
 					metadata.seasons[season_num].index = int(season_num)
 
-					Log('Looking for season media for %s season %s.', metadata.title, season_num)
-					try: self.findMultimedia(metadata.seasons[season_num], [path, seasonPath], 'season')
-					except Exception, e: Log("Error finding season media for season %s: %s" % (season_num, str(e)))
+					if not Prefs['localmediaagent']:
+						Log('Looking for season media for %s season %s.', metadata.title, season_num)
+						try: self.findMultimedia(metadata.seasons[season_num], [path, seasonPath], 'season')
+						except Exception, e: Log("Error finding season media for season %s: %s" % (season_num, str(e)))
 
 					episodeXML = []
 					epnumber = 0
@@ -989,12 +990,11 @@ class xbmcnfotv(Agent.TV_Shows):
 										if not Prefs['localmediaagent']:
 											multEpisode = (nfoepc > 1) and (not Prefs['multEpisodePlexPatch'] or not multEpTestPlexPatch)
 
-											episodeMetadata = metadata.seasons[season_num].episodes[ep_num]
 											episodeMedia = media.seasons[season_num].episodes[ep_num].items[0]
 											path = os.path.dirname(episodeMedia.parts[0].file)
 
 											Log('Looking for episode media for %s season %s.', metadata.title, season_num)
-											try: self.findMultimedia(episodeMetadata, [path], 'episode', episodeMedia.parts, multEpisode)
+											try: self.findMultimedia(episode, [path], 'episode', episodeMedia.parts, multEpisode)
 											except Exception, e: Log('Error finding media for episode: %s' % str(e))
 
 										Log("---------------------")
