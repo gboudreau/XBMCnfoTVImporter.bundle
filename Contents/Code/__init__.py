@@ -92,6 +92,108 @@ class xbmcnfotv(Agent.TV_Shows):
 			return text # leave as is
 		return re.sub("&#?\w+;", fixup, text)
 
+	##
+	# Search and add to plex one or more posters, banners, arts, thumbnails or themes by show, season or episode.
+	# author: https://github.com/joserick | J. Erick Carreon
+	# email: support@joserick.com
+	# date: Sep 12, 2019
+	# @param metadata Objet Plex/MetadataModel
+	# @param paths Paths where searches should be done.
+	# @param type Type media (show|season|episode)
+	# @param parts Parts of multi-episode.
+	# @return void
+
+	def AssetsLocal(self, metadata, paths, type, parts=[], multEpisode=False):
+		pathFiles = {}
+		audioExts = ['mp3', 'm4a']
+		imageExts = ['jpg', 'png', 'jpeg', 'tbn']
+		rootFile = os.path.splitext(os.path.basename(parts[0].file.encode("utf-8")))[0] if parts else None
+
+		for path in paths:
+			path = path.encode("utf-8")
+			for filePath in sorted(os.listdir(path)):
+				if filePath.endswith(tuple(imageExts + audioExts)):
+					filePath = filePath.encode("utf-8")
+					fullPath = os.path.join(path, filePath)
+					if os.path.isfile(fullPath):
+						pathFiles[filePath.lower()] = fullPath
+
+		# Structure for Frodo, Eden and DLNA
+		searchTuples = []
+		if type == 'show':
+			searchTuples.append(['(show|poster|folder)-?[0-9]?[0-9]?', metadata.posters, imageExts])
+			searchTuples.append(['banner-?[0-9]?[0-9]?', metadata.banners, imageExts])
+			searchTuples.append(['(fanart|art|background|backdrop)-?[0-9]?[0-9]?', metadata.art, imageExts])
+			searchTuples.append(['theme-?[0-9]?[0-9]?', metadata.themes, audioExts])
+		elif type == 'season':
+			searchTuples.append(['season-?0?%s(-poster)?-?[0-9]?[0-9]?' % metadata.index, metadata.posters, imageExts])
+			searchTuples.append(['season-?0?%s-banner-?[0-9]?[0-9]?' % metadata.index, metadata.banners, imageExts])
+			searchTuples.append(['season-?0?%s-(fanart|art|background|backdrop)-?[0-9]?[0-9]?' % metadata.index, metadata.art, imageExts])
+			if int(metadata.index) == 0:
+				searchTuples.append(['season-specials-poster-?[0-9]?[0-9]?', metadata.posters, imageExts])
+				searchTuples.append(['season-specials-banner-?[0-9]?[0-9]?', metadata.banners, imageExts])
+				searchTuples.append(['season-specials-(fanart|art|background|backdrop)-?[0-9]?[0-9]?', metadata.art, imageExts])
+		elif type == 'episode':
+			searchTuples.append([re.escape(rootFile) + '(-|-thumb)?-?[0-9]?[0-9]?', metadata.thumbs, imageExts])
+
+		for (structure, mediaList, exts) in searchTuples:
+			validKeys = []
+			sortIndex = 1
+			filePathKeys = sorted(pathFiles.keys(), key = lambda x: os.path.splitext(x)[0])
+			for filePath in filePathKeys:
+				for ext in exts:
+					if re.match('%s.%s' % (structure, ext), filePath, re.IGNORECASE):
+						if multEpisode and ("-E" in filePath): continue
+
+						data = Core.storage.load(pathFiles[filePath])
+						mediaHash = filePath + hashlib.md5(data).hexdigest()
+
+						validKeys.append(mediaHash)
+						if mediaHash not in mediaList:
+							mediaList[mediaHash] = Proxy.Media(data, sort_order = sortIndex)
+							Log('Found season poster image at ' + filePath)
+						else:
+							Log('Skipping file %s file because it already exists.', filePath)
+						sortIndex += 1
+
+			Log('Found %d valid things for structure %s (ext: %s)', len(validKeys), structure, str(exts))
+			validKeys = [value for value in mediaList.keys() if value in validKeys]
+			mediaList.validate_keys(validKeys)
+
+	def AssetsLink(self, nfoXML, metadata, type):
+		validKeys = []
+		searchTuples = [['poster', metadata.posters, 'thumb'], ['banner', metadata.banners, 'thumb'], ['art', metadata.art, 'fanart']]
+
+		if type == 'show':
+			searchTuples.append(['music', metadata.themes, 'theme'])
+
+		Log('Search %s posters and banners from url', type)
+		for mediaType, mediaList, tag in searchTuples:
+			Log('Search %s %s form url', type, mediaType)
+			try:
+				if tag == 'fanart':
+					nfoXMLAsset = nfoXML.xpath(tag)[0][0]
+				else:
+					nfoXMLAsset = nfoXML.xpath(tag)
+
+					for asset in nfoXMLAsset:
+						if asset.attrib.get('type', 'show') != type:
+							continue
+						if type == 'season' and metadata.index != int(asset.attrib.get('season')):
+							continue
+						if tag != 'thumb' or str(asset.attrib.get('aspect')) == mediaType:
+							Log('Trying to get ' + mediaType)
+							try:
+								mediaList[asset.text] = Proxy.Media(HTTP.Request(asset.getparent().attrib.get('url', '') + asset.text))
+								validKeys.append(asset.text)
+								Log('Found %s %s at %s', type, mediaType, asset.text)
+							except Exception, e:
+								Log('Error getting %s at %s: %s', mediaType, asset.text, str(e))
+
+					mediaList.validate_keys(list(set(validKeys) & set(mediaList.keys())))
+			except Exception, e:
+				Log('Error getting %s %s: %s', type, mediaType, str(e))
+
 ##### search function #####
 	def search(self, results, media, lang):
 		self.DLog("++++++++++++++++++++++++")
@@ -249,68 +351,6 @@ class xbmcnfotv(Agent.TV_Shows):
 			path = path2
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path1)
-
-		if not Prefs['localmediaagent']:
-			posterNames = []
-			posterNames.append (os.path.join(path, "poster.jpg"))
-			posterNames.append (os.path.join(path, "folder.jpg"))
-			posterNames.append (os.path.join(path, "show.jpg"))
-			posterNames.append (os.path.join(path, "season-all-poster.jpg"))
-
-			# check possible poster file locations
-			posterFilename = self.checkFilePaths (posterNames, 'poster')
-
-			if posterFilename:
-				posterData = Core.storage.load(posterFilename)
-				posterHash = hashlib.md5(posterData).hexdigest()
-				metadata.posters[posterHash] = Proxy.Media(posterData)
-				metadata.posters.validate_keys([posterHash])
-				Log('Found poster image at ' + posterFilename)
-
-			bannerNames = []
-			bannerNames.append (os.path.join(path, "banner.jpg"))
-			bannerNames.append (os.path.join(path, "folder-banner.jpg"))
-
-			# check possible banner file locations
-			bannerFilename = self.checkFilePaths (bannerNames, 'banner')
-
-			if bannerFilename:
-				bannerData = Core.storage.load(bannerFilename)
-				bannerHash = hashlib.md5(bannerData).hexdigest()
-				metadata.banners[bannerHash] = Proxy.Media(bannerData)
-				metadata.banners.validate_keys([bannerHash])
-				Log('Found banner image at ' + bannerFilename)
-
-			fanartNames = []
-
-			fanartNames.append (os.path.join(path, "fanart.jpg"))
-			fanartNames.append (os.path.join(path, "art.jpg"))
-			fanartNames.append (os.path.join(path, "backdrop.jpg"))
-			fanartNames.append (os.path.join(path, "background.jpg"))
-
-			# check possible fanart file locations
-			fanartFilename = self.checkFilePaths (fanartNames, 'fanart')
-
-			if fanartFilename:
-				fanartData = Core.storage.load(fanartFilename)
-				fanartHash = hashlib.md5(fanartData).hexdigest()
-				metadata.art[fanartHash] = Proxy.Media(fanartData)
-				metadata.art.validate_keys([fanartHash])
-				Log('Found fanart image at ' + fanartFilename)
-
-			themeNames = []
-
-			themeNames.append (os.path.join(path, "theme.mp3"))
-
-			# check possible theme file locations
-			themeFilename = self.checkFilePaths (themeNames, 'theme')
-
-			if themeFilename:
-				themeData = Core.storage.load(themeFilename)
-				themeHash = hashlib.md5(themeData).hexdigest()
-				metadata.themes[themeHash] = Proxy.Media(themeData)
-				metadata.themes.validate_keys([themeHash])
-				Log('Found theme music ' + themeFilename)
 
 		if media.title:
 			title = media.title
@@ -546,6 +586,20 @@ class xbmcnfotv(Agent.TV_Shows):
 					except:
 						self.DLog("No Series Episode Duration in tvschow.nfo file.")
 						pass
+
+				# Show assets
+				if not Prefs['localmediaagent']:
+					if Prefs['assetslocation'] == 'local':
+						Log("Looking for show assets for %s from local", metadata.title)
+						try: self.AssetsLocal(metadata, [path], 'show')
+						except Exception, e:
+							Log('Error finding show assets for %s from local: %s', metadata.title, str(e))
+					else:
+						Log("Looking for show assets for %s from url", metadata.title)
+						try: self.AssetsLink(nfoXML, metadata, 'show')
+						except Exception, e:
+							Log('Error finding show assets for %s from url: %s', metadata.title, str(e))
+
 				# Actors
 				rroles = []
 				metadata.roles.clear()
@@ -684,81 +738,17 @@ class xbmcnfotv(Agent.TV_Shows):
 					firstEpisodePath = XML.ElementFromURL(pageUrl).xpath('//Part')[0].get('file')
 					seasonPath = os.path.dirname(firstEpisodePath)
 
-					seasonFilename = ""
-					seasonFilenameZero = ""
-					seasonPathFilename = ""
-					if(int(season_num) == 0):
-						seasonFilenameFrodo = 'season-specials-poster.jpg'
-						seasonFilenameEden = 'season-specials.tbn'
-						seasonFilenameZero = 'season00-poster.jpg'
-					else:
-						seasonFilenameFrodo = 'season%(number)02d-poster.jpg' % {"number": int(season_num)}
-						seasonFilenameEden = 'season%(number)02d.tbn' % {"number": int(season_num)}
+					metadata.seasons[season_num].index = int(season_num)
 
 					if not Prefs['localmediaagent']:
-						seasonPosterNames = []
-
-						#Frodo
-						seasonPosterNames.append (os.path.join(path, seasonFilenameFrodo))
-						seasonPosterNames.append (os.path.join(path, seasonFilenameZero))
-						seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameFrodo))
-						seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameZero))
-						#Eden
-						seasonPosterNames.append (os.path.join(path, seasonFilenameEden))
-						seasonPosterNames.append (os.path.join(seasonPath, seasonFilenameEden))
-						#DLNA
-						seasonPosterNames.append (os.path.join(seasonPath, "folder.jpg"))
-						seasonPosterNames.append (os.path.join(seasonPath, "poster.jpg"))
-						#Fallback to Series Poster
-						seasonPosterNames.append (os.path.join(path, "poster.jpg"))
-
-						# check possible season poster file locations
-						seasonPosterFilename = self.checkFilePaths (seasonPosterNames, 'season poster')
-
-						if seasonPosterFilename:
-							seasonData = Core.storage.load(seasonPosterFilename)
-							seasonHash = hashlib.md5(seasonData).hexdigest()
-							metadata.seasons[season_num].posters[seasonHash] = Proxy.Media(seasonData)
-							metadata.seasons[season_num].posters.validate_keys([seasonHash])
-							Log('Found season poster image at ' + seasonPosterFilename)
-
-						# Season Banner
-						seasonBannerFileName = 'season%(number)02d-banner.jpg' % {"number": int(season_num)}
-
-						seasonBannerNames = []
-						seasonBannerNames.append (os.path.join(seasonPath, seasonBannerFileName))
-						seasonBannerNames.append (os.path.join(seasonPath, "banner.jpg"))
-						seasonBannerNames.append (os.path.join(seasonPath, "folder-banner.jpg"))
-						seasonBannerNames.append (os.path.join(path, seasonBannerFileName))
-						seasonBannerNames.append (os.path.join(path, "banner.jpg"))
-						seasonBannerNames.append (os.path.join(path, "folder-banner.jpg"))
-
-						# check possible banner file locations
-						seasonBanner = self.checkFilePaths (seasonBannerNames, 'season banner')
-
-						if seasonBanner:
-							seasonBannerData = Core.storage.load(seasonBanner)
-							seasonBannerHash = hashlib.md5(seasonBannerData).hexdigest()
-							metadata.seasons[season_num].banners[seasonBannerHash] = Proxy.Media(seasonBannerData)
-							metadata.seasons[season_num].banners.validate_keys([seasonBannerHash])
-							Log('Found season banner image at ' + seasonBanner)
-
-						# Season Fanart
-						seasonFanartFileName = 'season%(number)02d-fanart.jpg' % {"number": int(season_num)}
-						seasonFanartNames = []
-						seasonFanartNames.append (os.path.join(seasonPath, seasonFanartFileName))
-						seasonFanartNames.append (os.path.join(path, seasonFanartFileName))
-						seasonFanartNames.append (os.path.join(path, "fanart.jpg"))
-
-						# check possible Fanart file locations
-						seasonFanart = self.checkFilePaths (seasonFanartNames, 'season fanart')
-
-						if seasonFanart:
-							seasonFanartData = Core.storage.load(seasonFanart)
-							seasonFanartHash = hashlib.md5(seasonFanartData).hexdigest()
-							metadata.seasons[season_num].art[seasonFanartHash] = Proxy.Media(seasonFanartData)
-							metadata.seasons[season_num].art.validate_keys([seasonFanartHash])
-							Log('Found season fanart image at ' + seasonFanart)
+						if Prefs['assetslocation'] == 'local':
+							Log('Looking for season assets for %s season %s.', metadata.title, season_num)
+							try: self.AssetsLocal(metadata.seasons[season_num], [path, seasonPath], 'season')
+							except Exception, e: Log("Error finding season assets for %s season %s: %s", metadata.title, season_num, str(e))
+						else:
+							Log('Looking for season assets for %s season %s from url', metadata.title, season_num)
+							try: self.AssetsLink(nfoXML, metadata.seasons[season_num], 'season')
+							except Exception, e: Log('Error finding season assets for %s season %s from url: %s', metadata.title, season_num, str(e))
 
 					episodeXML = []
 					epnumber = 0
@@ -1046,30 +1036,27 @@ class xbmcnfotv(Agent.TV_Shows):
 											pass
 
 										if not Prefs['localmediaagent']:
-											episodeThumbNames = []
+											multEpisode = (nfoepc > 1) and (not Prefs['multEpisodePlexPatch'] or not multEpTestPlexPatch)
 
-											#Multiepisode nfo thumbs
-											if (nfoepc > 1) and (not Prefs['multEpisodePlexPatch'] or not multEpTestPlexPatch):
-												for name in glob.glob1(os.path.dirname(nfoFile), '*S' + str(season_num.zfill(2)) + 'E' + str(ep_num.zfill(2)) + '*.jpg'):
-													if "-E" in name: continue
-													episodeThumbNames.append (os.path.join(os.path.dirname(nfoFile), name))
-
-											#Frodo
-											episodeThumbNames.append (nfoFile.replace('.nfo', '-thumb.jpg'))
-											#Eden
-											episodeThumbNames.append (nfoFile.replace('.nfo', '.tbn'))
-											#DLNA
-											episodeThumbNames.append (nfoFile.replace('.nfo', '.jpg'))
-
-											# check possible episode thumb file locations
-											episodeThumbFilename = self.checkFilePaths (episodeThumbNames, 'episode thumb')
-
-											if episodeThumbFilename:
-												thumbData = Core.storage.load(episodeThumbFilename)
-												thumbHash = hashlib.md5(thumbData).hexdigest()
-												episode.thumbs[thumbHash] = Proxy.Media(thumbData)
-												episode.thumbs.validate_keys([thumbHash])
-												Log('Found episode thumb image at ' + episodeThumbFilename)
+											episodeMedia = media.seasons[season_num].episodes[ep_num].items[0]
+											path = os.path.dirname(episodeMedia.parts[0].file)
+											if Prefs['assetslocation'] == 'local':
+												Log('Looking for episode assets %s for %s season %s.', ep_num, metadata.title, season_num)
+												try: self.AssetsLocal(episode, [path], 'episode', episodeMedia.parts, multEpisode)
+												except Exception, e: Log('Error finding episode assets %s for %s season %s: %s', ep_num, metadata.title, season_num,str(e))
+											else:
+												Log('Looking for episode assets for %s season %s from url', metadata.title, season_num)
+												try:
+													thumb = nfoXML.xpath('thumb')[0]
+													Log('Trying to get thumbnail for episode %s for %s season %s from url.', ep_num,  metadata.title, season_num)
+													try:
+														episode.thumbs[thumb.text] = Proxy.Media(HTTP.Request(thumb.text))
+														episode.thumbs.validate_keys([thumb.text])
+														Log('Found episode thumbnail from url')
+													except Exception as e:
+														Log('Error download episode thumbnail %s for %s season %s from url: %s', ep_num,  metadata.title, season_num, str(e))
+												except Exception, e:
+													Log('Error finding episode thumbnail %s for %s season %s from url: %s', ep_num,  metadata.title, season_num, str(e))
 
 										Log("---------------------")
 										Log("Episode (S"+season_num.zfill(2)+"E"+ep_num.zfill(2)+") nfo Information")

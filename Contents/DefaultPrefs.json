@@ -12,6 +12,16 @@
     "default":"false"
   },
   {
+    "id":"assetslocation",
+    "label":"agents artwork location",
+    "type": "enum",
+    "values": [
+      "local",
+      "link",
+    ],
+    "default": "local"
+  },
+  {
     "id":"dayfirst",
     "label":"enable day first in ambiguous dates",
     "type":"bool",
