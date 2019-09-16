@@ -103,7 +103,7 @@ class xbmcnfotv(Agent.TV_Shows):
 	# @param parts Parts of multi-episode.
 	# @return void
 
-	def findMultimedia(self, metadata, paths, type, parts=[], multEpisode=False):
+	def AssetsLocal(self, metadata, paths, type, parts=[], multEpisode=False):
 		pathFiles = {}
 		audioExts = ['mp3', 'm4a']
 		imageExts = ['jpg', 'png', 'jpeg', 'tbn']
@@ -159,6 +159,40 @@ class xbmcnfotv(Agent.TV_Shows):
 			Log('Found %d valid things for structure %s (ext: %s)', len(validKeys), structure, str(exts))
 			validKeys = [value for value in mediaList.keys() if value in validKeys]
 			mediaList.validate_keys(validKeys)
+
+	def AssetsLink(self, nfoXML, metadata, type):
+		validKeys = []
+		searchTuples = [['poster', metadata.posters, 'thumb'], ['banner', metadata.banners, 'thumb'], ['art', metadata.art, 'fanart']]
+
+		if type == 'show':
+			searchTuples.append(['music', metadata.themes, 'theme'])
+
+		Log('Search %s posters and banners from url', type)
+		for mediaType, mediaList, tag in searchTuples:
+			Log('Search %s %s form url', type, mediaType)
+			try:
+				if tag == 'fanart':
+					nfoXMLAsset = nfoXML.xpath(tag)[0][0]
+				else:
+					nfoXMLAsset = nfoXML.xpath(tag)
+
+					for asset in nfoXMLAsset:
+						if asset.attrib.get('type', 'show') != type:
+							continue
+						if type == 'season' and metadata.index != int(asset.attrib.get('season')):
+							continue
+						if tag != 'thumb' or str(asset.attrib.get('aspect')) == mediaType:
+							Log('Trying to get ' + mediaType)
+							try:
+								mediaList[asset.text] = Proxy.Media(HTTP.Request(asset.getparent().attrib.get('url', '') + asset.text))
+								validKeys.append(asset.text)
+								Log('Found %s %s at %s', type, mediaType, asset.text)
+							except Exception, e:
+								Log('Error getting %s at %s: %s', mediaType, asset.text, str(e))
+
+					mediaList.validate_keys(list(set(validKeys) & set(mediaList.keys())))
+			except Exception, e:
+				Log('Error getting %s %s: %s', type, mediaType, str(e))
 
 ##### search function #####
 	def search(self, results, media, lang):
@@ -317,11 +351,6 @@ class xbmcnfotv(Agent.TV_Shows):
 			path = path2
 		if not os.path.exists(nfoName):
 			path = os.path.dirname(path1)
-
-		if not Prefs['localmediaagent']:
-			Log("Looking for multimedia for show")
-			try: self.findMultimedia(metadata, [path], 'show')
-			except Exception, e: Log('Error finding show media: %s' % str(e))
 
 		if media.title:
 			title = media.title
@@ -557,6 +586,20 @@ class xbmcnfotv(Agent.TV_Shows):
 					except:
 						self.DLog("No Series Episode Duration in tvschow.nfo file.")
 						pass
+
+				# Show assets
+				if not Prefs['localmediaagent']:
+					if Prefs['assetslocation'] == 'local':
+						Log("Looking for show assets for %s from local", metadata.title)
+						try: self.AssetsLocal(metadata, [path], 'show')
+						except Exception, e:
+							Log('Error finding show assets for %s from local: %s', metadata.title, str(e))
+					else:
+						Log("Looking for show assets for %s from url", metadata.title)
+						try: self.AssetsLink(nfoXML, metadata, 'show')
+						except Exception, e:
+							Log('Error finding show assets for %s from url: %s', metadata.title, str(e))
+
 				# Actors
 				rroles = []
 				metadata.roles.clear()
@@ -698,9 +741,14 @@ class xbmcnfotv(Agent.TV_Shows):
 					metadata.seasons[season_num].index = int(season_num)
 
 					if not Prefs['localmediaagent']:
-						Log('Looking for season media for %s season %s.', metadata.title, season_num)
-						try: self.findMultimedia(metadata.seasons[season_num], [path, seasonPath], 'season')
-						except Exception, e: Log("Error finding season media for season %s: %s" % (season_num, str(e)))
+						if Prefs['assetslocation'] == 'local':
+							Log('Looking for season assets for %s season %s.', metadata.title, season_num)
+							try: self.AssetsLocal(metadata.seasons[season_num], [path, seasonPath], 'season')
+							except Exception, e: Log("Error finding season assets for %s season %s: %s", metadata.title, season_num, str(e))
+						else:
+							Log('Looking for season assets for %s season %s from url', metadata.title, season_num)
+							try: self.AssetsLink(nfoXML, metadata.seasons[season_num], 'season')
+							except Exception, e: Log('Error finding season assets for %s season %s from url: %s', metadata.title, season_num, str(e))
 
 					episodeXML = []
 					epnumber = 0
@@ -992,10 +1040,23 @@ class xbmcnfotv(Agent.TV_Shows):
 
 											episodeMedia = media.seasons[season_num].episodes[ep_num].items[0]
 											path = os.path.dirname(episodeMedia.parts[0].file)
-
-											Log('Looking for episode media for %s season %s.', metadata.title, season_num)
-											try: self.findMultimedia(episode, [path], 'episode', episodeMedia.parts, multEpisode)
-											except Exception, e: Log('Error finding media for episode: %s' % str(e))
+											if Prefs['assetslocation'] == 'local':
+												Log('Looking for episode assets %s for %s season %s.', ep_num, metadata.title, season_num)
+												try: self.AssetsLocal(episode, [path], 'episode', episodeMedia.parts, multEpisode)
+												except Exception, e: Log('Error finding episode assets %s for %s season %s: %s', ep_num, metadata.title, season_num,str(e))
+											else:
+												Log('Looking for episode assets for %s season %s from url', metadata.title, season_num)
+												try:
+													thumb = nfoXML.xpath('thumb')[0]
+													Log('Trying to get thumbnail for episode %s for %s season %s from url.', ep_num,  metadata.title, season_num)
+													try:
+														episode.thumbs[thumb.text] = Proxy.Media(HTTP.Request(thumb.text))
+														episode.thumbs.validate_keys([thumb.text])
+														Log('Found episode thumbnail from url')
+													except Exception as e:
+														Log('Error download episode thumbnail %s for %s season %s from url: %s', ep_num,  metadata.title, season_num, str(e))
+												except Exception, e:
+													Log('Error finding episode thumbnail %s for %s season %s from url: %s', ep_num,  metadata.title, season_num, str(e))
 
 										Log("---------------------")
 										Log("Episode (S"+season_num.zfill(2)+"E"+ep_num.zfill(2)+") nfo Information")
