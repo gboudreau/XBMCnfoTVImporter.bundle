@@ -777,8 +777,10 @@ class xbmcnfotv(Agent.TV_Shows):
 								filepath = path1.split
 								path = os.path.dirname(path1)
 								fileExtension = path1.split(".")[-1].lower()
-
+								
 								nfoFile = path1.replace('.'+fileExtension, '.nfo')
+								# Handling stacked files: part#, cd#, dvd#, pt#, disk#, disc#
+								nfoFile = re.sub(r'[.-]?(part|cd|dvd|pt|disk|disc)\d', '', nfoFile, flags = re.IGNORECASE )
 								self.DLog("Looking for episode NFO file " + nfoFile)
 								if os.path.exists(nfoFile):
 									self.DLog("File exists...")
