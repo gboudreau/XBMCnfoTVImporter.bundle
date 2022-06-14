@@ -776,7 +776,7 @@ class xbmcnfotv(Agent.TV_Shows):
 								self.DLog('UPDATE: ' + path1)
 								filepath = path1.split
 								path = os.path.dirname(path1)
-								fileExtension = path1.split(".")[-1].lower()
+								fileExtension = path1.split(".")[-1]
 
 								nfoFile = path1.replace('.'+fileExtension, '.nfo')
 								self.DLog("Looking for episode NFO file " + nfoFile)
