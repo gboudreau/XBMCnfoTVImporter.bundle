@@ -6,6 +6,18 @@
     "default":"false"
   },
   {
+    "id":"collectionsfromsets",
+    "label":"create collections from sets",
+    "type":"bool",
+    "default":"false"
+  },
+  {
+    "id":"collectionsfromtags",
+    "label":"create collections from tags",
+    "type":"bool",
+    "default":"false"
+  },
+  {
     "id":"localmediaagent",
     "label":"disable agents artwork support (use local media assets instead)",
     "type":"bool",
