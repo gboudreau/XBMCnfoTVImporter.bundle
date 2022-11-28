@@ -407,9 +407,9 @@ class xbmcnfotv(Agent.TV_Shows):
 				# Content Rating
 				try:
 					mpaa = nfoXML.xpath('./mpaa')[0].text
-					match = re.match(r'(?:Rated\s)?(?P<mpaa>[A-z0-9-+/.]+(?:\s[0-9]+[A-z]?)?)?', mpaa)
+					match = re.match(r'(?:Rated\s)?(?P<mpaa>[A-z0-9-+/.:]+(?:\s[0-9]+[A-z]?)?)?', mpaa)
 					if match.group('mpaa'):
-						content_rating = match.group('mpaa')
+						content_rating = match.group('mpaa').replace(':','/').replace('DK','dk') #Plex wants : as / and DK as dk
 					else:
 						content_rating = 'NR'
 					metadata.content_rating = content_rating
@@ -865,9 +865,9 @@ class xbmcnfotv(Agent.TV_Shows):
 										# Ep. Content Rating
 										try:
 											mpaa = nfoXML.xpath('./mpaa')[0].text
-											match = re.match(r'(?:Rated\s)?(?P<mpaa>[A-z0-9-+/.]+(?:\s[0-9]+[A-z]?)?)?', mpaa)
+											match = re.match(r'(?:Rated\s)?(?P<mpaa>[A-z0-9-+/.:]+(?:\s[0-9]+[A-z]?)?)?', mpaa)
 											if match.group('mpaa'):
-												content_rating = match.group('mpaa')
+												content_rating = match.group('mpaa').replace(':','/').replace('DK','dk') #Plex wants : as / and DK as dk
 											else:
 												content_rating = 'NR'
 											episode.content_rating = content_rating
