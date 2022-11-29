@@ -11,11 +11,19 @@
 # Krypton ratings fix by F4RHaD
 # Season banner and season art support by Christian
 #
-import os, re, time, datetime, platform, traceback, glob, re, htmlentitydefs
-from dateutil.parser import parse
-import urllib
-import urlparse
+import datetime
+import glob
 import hashlib
+import os
+import platform
+import re
+import time
+import traceback
+import urllib
+
+import htmlentitydefs
+import urlparse
+from dateutil.parser import parse
 
 PERCENT_RATINGS = {
   'rottentomatoes','rotten tomatoes','rt','flixster'
@@ -561,14 +569,15 @@ class xbmcnfotv(Agent.TV_Shows):
 				except:
 					self.DLog('No set tag found...')
 					pass
-				if setname:
+				if setname and Prefs['collectionsfromsets']:
 					metadata.collections.add (setname)
 					self.DLog('Added Collection from Set tag.')
 				# Collections (Tags)
 				try:
-					tags = nfoXML.xpath('tag')
-					[metadata.collections.add(t.strip()) for tag_xml in tags for t in tag_xml.text.split('/')]
-					self.DLog('Added Collection(s) from tags.')
+					if Prefs['collectionsfromtags']:
+						tags = nfoXML.xpath('tag')
+						[metadata.collections.add(t.strip()) for tag_xml in tags for t in tag_xml.text.split('/')]
+						self.DLog('Added Collection(s) from tags.')
 				except:
 					self.DLog('Error adding Collection(s) from tags.')
 					pass
